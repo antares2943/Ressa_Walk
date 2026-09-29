@@ -386,7 +386,7 @@
 
     <!-- KAIYU -->
     <section class="view" id="v-kaiyu">
-      <div class="sc-title">さばえ さんぽ</div>
+      <div class="sc-title">おでかけガイド</div>
 
       <div class="card hi">
         <div class="lbl">基本情報</div>
@@ -496,17 +496,17 @@
   var TABS=[
     {id:"home",label:"ホーム",icon:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'},
     {id:"hana",label:"花ごよみ",icon:'<circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="12" r="2.4"/>'},
-    {id:"konzatsu",label:"混雑",icon:'<rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="17" y="9" width="4" height="11" rx="1"/>'},
     {id:"dex",label:"図鑑",icon:'<circle cx="12" cy="13" r="6.5"/><circle cx="6" cy="6.5" r="2.6"/><circle cx="18" cy="6.5" r="2.6"/>'},
-    {id:"kaiyu",label:"さんぽ",icon:'<path d="M6 20c0-3 2-4 5-4s5-1 5-4-2-4-4-4"/><circle cx="6" cy="20" r="1.4" fill="currentColor"/><circle cx="17" cy="4" r="1.4" fill="currentColor"/>'}
+    {id:"konzatsu",label:"混雑",icon:'<rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="17" y="9" width="4" height="11" rx="1"/>'},
+    {id:"kaiyu",label:"ガイド",icon:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8.01"/>'}
   ];
 
   var TILES=[
     {go:"hana",label:"花ごよみ",bg:"bg-az",icon:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="5" r="3.2"/><circle cx="12" cy="19" r="3.2"/><circle cx="5" cy="12" r="3.2"/><circle cx="19" cy="12" r="3.2"/>',fill:true},
     {go:"konzatsu",label:"混雑予報",bg:"bg-sky",icon:'<rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="17" y="9" width="4" height="11" rx="1"/>',fill:true},
     {go:"dex",label:"レッサー図鑑",bg:"bg-rust",icon:'<circle cx="12" cy="13" r="7"/><circle cx="5.5" cy="6.5" r="3"/><circle cx="18.5" cy="6.5" r="3"/>',fill:true},
-    {go:"kaiyu",label:"やさしいナビ",bg:"bg-garden",icon:'<path d="M12 21s7-6 7-11a7 7 0 10-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',fill:false},
-    {go:"kaiyu",label:"さんぽルート",bg:"bg-maple",icon:'<path d="M6 20c0-3 2-4 5-4s5-1 5-4-2-4-4-4"/>',fill:false},
+    {go:"kaiyu",label:"ガイド",bg:"bg-garden",icon:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8.01"/>',fill:false},
+    {go:"dex",label:"写真",bg:"bg-maple",icon:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7l1.5-2h5L16 7"/><circle cx="12" cy="13.5" r="3.2"/>',fill:false},
     {go:"dex",label:"スタンプ",bg:"bg-ink",icon:'<path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.8 5.9 21.4l1.4-6.8L2.2 9.9l6.9-.8z"/>',fill:true}
   ];
 
