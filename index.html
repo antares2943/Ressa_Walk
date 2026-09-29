@@ -206,6 +206,7 @@
   /* panda dex */
   .pick{display:flex;gap:13px;align-items:center;background:linear-gradient(120deg,color-mix(in srgb,var(--rust) 15%,var(--surface)),var(--surface));border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:15px}
   .pick .av{width:60px;height:60px;flex:0 0 auto}
+  img.av{object-fit:cover;border-radius:50%;background:var(--line);display:block}
   .pick .pl{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--rust)}
   .pick .pn{font-family:var(--display);font-weight:700;font-size:20px;line-height:1.2}
   .pick .pm{font-size:11.5px;color:var(--ink-soft);margin-top:3px}
@@ -363,15 +364,15 @@
     <section class="view" id="v-dex">
       <div class="sc-title">レッサー図鑑</div>
       <div class="pick">
-        <svg class="av" viewBox="0 0 100 100"><circle cx="50" cy="54" r="30" fill="#B24A25"/><circle cx="50" cy="56" r="21" fill="#F4E4D0"/><path d="M22 34 Q18 14 34 22 Q40 28 34 38 Z" fill="#B24A25"/><path d="M78 34 Q82 14 66 22 Q60 28 66 38 Z" fill="#B24A25"/><circle cx="40" cy="52" r="4.6" fill="#2A211B"/><circle cx="60" cy="52" r="4.6" fill="#2A211B"/><path d="M50 60 l-5 4 h10 Z" fill="#2A211B"/></svg>
-        <div><div class="pl">きょうの推しレッサー</div><div class="pn">モミジ</div><div class="pm">午前は木の上でお昼寝しがち。会うなら11時ごろ。</div></div>
+        <img class="av" id="pickAv" alt="きょうの推しレッサー">
+        <div><div class="pl">きょうの推しレッサー</div><div class="pn" id="pickName"></div><div class="pm" id="pickNote"></div></div>
       </div>
       <div class="dex" id="dex"></div>
       <div class="stampbar">
-        <div class="sh"><span>会えたレッサー</span><span id="metCount">0 / 6</span></div>
+        <div class="sh"><span>会えたレッサー</span><span id="metCount">0 / 9</span></div>
         <div class="track"><i id="metTrack" style="width:0%"></i></div>
       </div>
-      <div class="datasrc"><b>データ連携</b>：個体名・生年月日は「西山公園レッサーパンダ」個体データから自動表示する想定です（画像・名称はイメージ）。</div>
+      <div class="datasrc"><b>出典</b>：個体名・生年月日・性別・プロフィールは鯖江市オープンデータ「西山動物園のレッサーパンダ一覧」、写真は鯖江市オープンデータ「レッサーパンダ画像」より（CC BY）。</div>
 
       <div class="lbl" style="margin:20px 2px 6px">みんなのレッサー写真</div>
       <div class="uphint" style="text-align:left;margin:0 2px 10px">※これは<b>仮の投稿機能</b>です。表示中の写真は<b>動作確認用のサンプル</b>で、実際の投稿ではありません。<b>いいね数も仮の表示</b>（この端末内に保存）です。本番では投稿写真・いいねを別サーバーに保存する想定です。</div>
@@ -484,13 +485,17 @@
   };
   var stColor={"見頃":"var(--azalea)","五分咲き":"var(--maple)","つぼみ":"var(--gold)","開催中":"var(--gold)","色づき始め":"var(--rust)"};
 
+  // 出典：鯖江市オープンデータ「西山動物園のレッサーパンダ一覧」＋個体画像（レッサーパンダ画像）
   var PANDAS=[
-    {n:"モミジ",b:"2021.7.12",sex:"メス",note:"午前は木の上でお昼寝しがち。会うなら11時ごろ。",bday:true},
-    {n:"ソラ",b:"2019.6.30",sex:"オス",note:"活発で運動が得意。放飼場をよく歩き回ります。"},
-    {n:"ココ",b:"2022.5.20",sex:"メス",note:"人なつっこく、ガラス際まで来てくれることも。"},
-    {n:"ハル",b:"2020.4.3",sex:"オス",note:"のんびり屋。おやつの時間が狙い目です。"},
-    {n:"フク",b:"2018.8.1",sex:"オス",note:"最年長。堂々とした風格の持ち主。"},
-    {n:"ナナ",b:"2023.6.15",sex:"メス",note:"いちばんの新入り。好奇心おうせいな子です。"}
+    {n:"ミンファ",b:"2006.6.23",sex:"メス",note:"ティアラの母。市川市動植物園うまれ。",img:"./reference/ressa/minfa.jpg"},
+    {n:"たいよう",b:"2013.6.15",sex:"オス",note:"池田動物園から婿入り。",img:"./reference/ressa/taiyo.png"},
+    {n:"ライト",b:"2013.7.18",sex:"オス",note:"キラリの息子、かえでの父。西山うまれ。",img:"./reference/ressa/lite.png"},
+    {n:"まつば",b:"2014.7.17",sex:"メス",note:"ニーコとレイファの母。日本平動物園うまれ。",img:"./reference/ressa/matsuba.jpg"},
+    {n:"モッチー",b:"2015.6.24",sex:"オス",note:"ニーコとレイファの父。西山うまれ。",img:"./reference/ressa/motchi.png"},
+    {n:"ティアラ",b:"2015.7.6",sex:"メス",note:"ミンファの娘。王子動物園うまれ。",img:"./reference/ressa/tiara.png"},
+    {n:"かのこ",b:"2016.6.24",sex:"メス",note:"かえでの母。多摩動物公園うまれ。",img:"./reference/ressa/kanoko.jpg"},
+    {n:"かんた",b:"2018.7.12",sex:"オス",note:"秋田市大森山動物園から来園。",img:"./reference/ressa/kanta.png"},
+    {n:"アケビ",b:"2020.6.29",sex:"メス",note:"仙台市八木山動物公園から来園。",img:"./reference/ressa/akebi.jpg"}
   ];
 
   var TABS=[
@@ -661,17 +666,25 @@
   });
 
   /* ---------- render: 図鑑 ---------- */
+  function renderPick(){
+    var p=PANDAS[(new Date().getDate())%PANDAS.length];
+    var a=$("#pickAv");if(a)a.src=encodeURI(p.img);
+    var n=$("#pickName");if(n)n.textContent=p.n;
+    var t=$("#pickNote");if(t)t.textContent=p.note;
+  }
   function renderDex(){
+    var thisMonth=new Date().getMonth()+1;
     $("#dex").innerHTML=PANDAS.map(function(p,i){
+      var bd=(+String(p.b).split(".")[1])===thisMonth;
       return '<div class="pcard'+(met[p.n]?" met":"")+'" data-i="'+i+'">'+
-        (p.bday?'<span class="bday">お誕生日</span>':'')+
+        (bd?'<span class="bday">お誕生月</span>':'')+
         '<span class="chk">'+svgWrap('<path d="M5 12l4 4L19 7"/>')+'</span>'+
-        pandaSVG(i%2===1)+'<div class="nm">'+p.n+'</div><div class="bd">'+p.b+'</div></div>';
+        '<img class="av" src="'+encodeURI(p.img)+'" alt="'+p.n+'" loading="lazy"><div class="nm">'+p.n+'</div><div class="bd">'+p.b+'</div></div>';
     }).join("");
     Array.prototype.slice.call($("#dex").querySelectorAll(".pcard")).forEach(function(card){
       card.addEventListener("click",function(){openPanda(+card.getAttribute("data-i"))});
     });
-    updateMet();
+    renderPick();updateMet();
   }
   function updateMet(){
     var n=PANDAS.filter(function(p){return met[p.n]}).length;
@@ -681,11 +694,11 @@
   function openPanda(i){
     var p=PANDAS[i];var isMet=!!met[p.n];
     $("#sheet").innerHTML='<div class="grab"></div>'+
-      '<div class="mh">'+pandaSVG(i%2===1).replace('class="av"','class="av"')+
+      '<div class="mh"><img class="av" src="'+encodeURI(p.img)+'" alt="'+p.n+'">'+
       '<div><div class="mn">'+p.n+'</div><div class="mmeta">西山動物園のレッサーパンダ</div></div></div>'+
       '<div class="mrow"><span>生年月日</span><span>'+p.b+'</span></div>'+
       '<div class="mrow"><span>性別</span><span>'+p.sex+'</span></div>'+
-      '<div class="mrow"><span>ひとこと</span><span style="max-width:60%;text-align:right;font-weight:500;color:var(--ink-soft)">'+p.note+'</span></div>'+
+      '<div class="mrow"><span>プロフィール</span><span style="max-width:62%;text-align:right;font-weight:500;color:var(--ink-soft)">'+p.note+'</span></div>'+
       '<button class="btn'+(isMet?' met':'')+'" id="metBtn">'+(isMet?'✓ 会えた（タップで取消）':'この子に会えた！スタンプGET')+'</button>';
     $("#modal").classList.add("show");
     $("#metBtn").addEventListener("click",function(){
@@ -798,14 +811,14 @@
   function likedMap(){try{return JSON.parse(localStorage.getItem(LIKE_KEY)||"{}")||{}}catch(e){return{}}}
   function setLikedMap(m){try{localStorage.setItem(LIKE_KEY,JSON.stringify(m))}catch(e){}}
   function photoId(p){return p.id||("x"+String(p.url||"").length+"_"+(p.handle||""))}
-  // 仮のサンプル写真（reference/レッサー/ に配置）。likes は仮のいいね数。本番サーバー用意後は不要。
+  // 仮のサンプル写真（reference/ressa/ に配置）。likes は仮のいいね数。本番サーバー用意後は不要。
   var SAMPLE_PHOTOS=[
-    {url:"./reference/レッサー/kanta.png",handle:"さばえ写真部",time:"サンプル",sample:true,id:"s1",likes:24},
-    {url:"./reference/レッサー/tiara.png",handle:"レッサー推し",time:"サンプル",sample:true,id:"s2",likes:18},
-    {url:"./reference/レッサー/lite.png",handle:"パンダ好き太郎",time:"サンプル",sample:true,id:"s3",likes:31},
-    {url:"./reference/レッサー/motchi.png",handle:"にしやま散歩",time:"サンプル",sample:true,id:"s4",likes:12},
-    {url:"./reference/レッサー/taiyo.png",handle:"福井カメラ部",time:"サンプル",sample:true,id:"s5",likes:27},
-    {url:"./reference/レッサー/minfa.jpg",handle:"もふもふ係",time:"サンプル",sample:true,id:"s6",likes:9}
+    {url:"./reference/ressa/kanta.png",handle:"さばえ写真部",time:"サンプル",sample:true,id:"s1",likes:24},
+    {url:"./reference/ressa/tiara.png",handle:"レッサー推し",time:"サンプル",sample:true,id:"s2",likes:18},
+    {url:"./reference/ressa/lite.png",handle:"パンダ好き太郎",time:"サンプル",sample:true,id:"s3",likes:31},
+    {url:"./reference/ressa/motchi.png",handle:"にしやま散歩",time:"サンプル",sample:true,id:"s4",likes:12},
+    {url:"./reference/ressa/taiyo.png",handle:"福井カメラ部",time:"サンプル",sample:true,id:"s5",likes:27},
+    {url:"./reference/ressa/minfa.jpg",handle:"もふもふ係",time:"サンプル",sample:true,id:"s6",likes:9}
   ];
   async function fetchPhotos(){
     if(PHOTO_API){try{var r=await fetch(PHOTO_API+"/photos");if(r.ok)return await r.json()}catch(e){}return[]}
