@@ -166,6 +166,22 @@
   .accrow b{color:var(--ink)}
   .acci{font-size:11px;font-weight:700;color:#fff;border-radius:7px;padding:4px 0;text-align:center}
   .acci.train{background:var(--sky)}.acci.car{background:var(--maple)}.acci.bus{background:var(--garden)}.acci.addr{background:var(--ink-soft)}
+  /* さんぽ：周辺スポット・カレンダー・リンク */
+  .spot{display:block;padding:11px 0;border-bottom:1px solid var(--line);text-decoration:none}
+  .spot:last-child{border-bottom:none}
+  .spot .sn{font-weight:700;color:var(--ink);font-size:14px;display:flex;align-items:center;gap:6px}
+  .spot .sd{font-size:12px;color:var(--ink-soft);margin-top:2px;line-height:1.6}
+  .spot .ext{color:var(--rust);font-size:12px}
+  .cal{display:grid;gap:10px}
+  .calrow{display:grid;grid-template-columns:118px 1fr;gap:10px;font-size:13px;align-items:baseline}
+  .calrow .cm{font-weight:700;color:var(--rust);font-size:12px}
+  .calrow .cd{color:var(--ink);font-weight:500}
+  .linklist{display:grid}
+  .linkrow{display:flex;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px;text-decoration:none;color:var(--ink);font-weight:700}
+  .linkrow:last-child{border-bottom:none}
+  .linkrow .arw{margin-left:auto;color:var(--rust)}
+  .srcnote{font-size:11px;color:var(--muted);line-height:1.7;margin-top:8px}
+  .datasrc a{color:var(--sky)}
   .reflink{display:inline-block;margin-top:12px;font-size:12.5px;font-weight:700;color:var(--rust);text-decoration:none}
   .reflink:hover{text-decoration:underline}
 
@@ -371,9 +387,57 @@
     <!-- KAIYU -->
     <section class="view" id="v-kaiyu">
       <div class="sc-title">さばえ さんぽ</div>
+
+      <div class="card hi">
+        <div class="lbl">基本情報</div>
+        <div class="acc">
+          <div class="accrow"><span class="acci addr">料金</span><div>西山動物園は<b>入園無料</b></div></div>
+          <div class="accrow"><span class="acci train">時間</span><div>西山動物園 <b>9:00〜16:30</b>（公園は常時開放）</div></div>
+          <div class="accrow"><span class="acci bus">休み</span><div>西山動物園 <b>毎週月曜</b>（祝日の場合は翌日）</div></div>
+          <div class="accrow"><span class="acci car">所在地</span><div>福井県鯖江市桜町3丁目7-20 ／ 公園管理事務所 0778-51-1001</div></div>
+        </div>
+      </div>
+
+      <div class="card hi">
+        <div class="lbl">まちなかのみどころ</div>
+        <a class="spot" href="https://www.city.sabae.fukui.jp/kanko/playing/museum.html" target="_blank" rel="noopener"><div class="sn">めがねミュージアム <span class="ext">↗</span></div><div class="sd">鯖江名物・眼鏡の博物館／手づくり体験／ショップ・カフェ</div></a>
+        <a class="spot" href="https://www.city.sabae.fukui.jp/kanko/playing/urushinosato.html" target="_blank" rel="noopener"><div class="sn">うるしの里会館 <span class="ext">↗</span></div><div class="sd">越前漆器の産業会館。見学・絵付け等の体験・産地価格の販売</div></a>
+        <div class="spot"><div class="sn">道の駅 西山公園</div><div class="sd">公園に隣接する道の駅。軽食やおみやげに</div></div>
+      </div>
+
+      <div class="card hi">
+        <div class="lbl">季節の見どころ（例年の目安）</div>
+        <div class="cal">
+          <div class="calrow"><span class="cm">4月上旬</span><div class="cd">桜</div></div>
+          <div class="calrow"><span class="cm">4月下旬〜5月上旬</span><div class="cd">ツツジ見頃（約5万株）</div></div>
+          <div class="calrow"><span class="cm">5月3〜5日</span><div class="cd">さばえつつじまつり</div></div>
+          <div class="calrow"><span class="cm">11月ごろ</span><div class="cd">紅葉（嚮陽庭園ほか）</div></div>
+        </div>
+        <div class="srcnote">※時期は例年の目安です。最新の日程は公式サイトでご確認ください。</div>
+      </div>
+
+      <div class="card hi">
+        <div class="lbl">関連リンク</div>
+        <div class="linklist">
+          <a class="linkrow" href="https://www.city.sabae.fukui.jp/kanko/playing/nishiyama.html" target="_blank" rel="noopener">鯖江市公式（西山公園）<span class="arw">↗</span></a>
+          <a class="linkrow" href="https://www.city.sabae.fukui.jp/nishiyama_zoo/" target="_blank" rel="noopener">鯖江市西山動物園 公式<span class="arw">↗</span></a>
+          <a class="linkrow" href="https://www.city.sabae.fukui.jp/kanko/event/tutujimaturi.html" target="_blank" rel="noopener">さばえつつじまつり<span class="arw">↗</span></a>
+          <a class="linkrow" href="https://www.fuku-e.com/spot/detail_1535.html" target="_blank" rel="noopener">ふくいドットコム（西山公園）<span class="arw">↗</span></a>
+          <a class="linkrow" href="https://data.city.sabae.lg.jp/" target="_blank" rel="noopener">データシティ鯖江（オープンデータ）<span class="arw">↗</span></a>
+        </div>
+      </div>
+
       <div class="nowtag"><span class="dotc" style="background:var(--rust)"></span>来訪者はどこから来ている？（人流データ）</div>
       <div id="residenceReal"></div>
-      <div class="datasrc"><b>データ活用の狙い</b>：来訪者の居住地割合（市区町村別の人流データ）は、県外客向け・近隣客向けの回遊コースやまちなか連携を考える材料になります。</div>
+
+      <div class="datasrc">
+        <b>出典・参考</b><br>
+        ・西山動物園（開園時間・休園日・入園無料）：<a href="https://www.city.sabae.fukui.jp/nishiyama_zoo/" target="_blank" rel="noopener">鯖江市西山動物園 公式</a><br>
+        ・つつじまつり・見頃：<a href="https://www.city.sabae.fukui.jp/kanko/event/tutujimaturi.html" target="_blank" rel="noopener">鯖江市公式</a> ／ <a href="https://www.fuku-e.com/event/detail_5952.html" target="_blank" rel="noopener">ふくいドットコム</a><br>
+        ・めがねミュージアム／うるしの里会館：<a href="https://www.city.sabae.fukui.jp/kanko/playing/museum.html" target="_blank" rel="noopener">鯖江市公式（めがね）</a> ／ <a href="https://www.city.sabae.fukui.jp/kanko/playing/urushinosato.html" target="_blank" rel="noopener">（うるし）</a><br>
+        ・所在地・問合せ：<a href="https://www.city.sabae.fukui.jp/kanko/playing/nishiyama.html" target="_blank" rel="noopener">鯖江市公式（西山公園）</a><br>
+        ・来訪者の居住地割合：鯖江市オープンデータ（市区町村別割合・人流）
+      </div>
     </section>
   </div>
 
