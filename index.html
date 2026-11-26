@@ -402,7 +402,8 @@
       </div>
       <div class="nowtag" id="seasonNow"></div>
       <button type="button" id="facilBtn" class="mapedit">トイレ・AEDを表示</button>
-      <button type="button" id="editPins" class="mapedit">ピン位置を調整</button>
+      <!-- 開発用：ピン位置の再調整ボタン。通常は非表示。調整したいときは下の style="display:none" を外す。 -->
+      <button type="button" id="editPins" class="mapedit" style="display:none">ピン位置を調整</button>
       <div id="flowerMap"></div>
       <div class="maplegend" id="mapLegend"></div>
       <div class="uphint" id="facilNote" style="text-align:left;margin:0 2px 8px;display:none">トイレ8か所は鯖江市オープンデータ「公共トイレ」。AEDは園内の公開データが無いため、緯度経度から算出した<b>園周辺の最寄り（直線距離の目安）</b>を表示（出典：鯖江市オープンデータ「AED」）。位置は案内図に合わせた目安です。<b style="color:var(--azalea)">ピンク</b>のWC＝ベビーベッドあり（おむつ替え可）。</div>
@@ -626,6 +627,7 @@
   var curSeason="spring";
   var flowerMap=null,markerLayer=null,markers=[],illustCfg=null,facilityLayer=null,showFacil=false,editMode=false;
   // ピン位置の手修正を保存（localStorage）。トイレ/AEDは春秋で共通キーのため両方に反映される。
+  // ※調整ボタン(#editPins)は通常は非表示。再調整したいときは下のHTMLの style="display:none" を外す。
   var PINPOS={};try{PINPOS=JSON.parse(localStorage.getItem("ressawalk_pinpos")||"{}")||{}}catch(e){}
   function savePin(k,x,y){PINPOS[k]=[x,y];try{localStorage.setItem("ressawalk_pinpos",JSON.stringify(PINPOS))}catch(e){}}
   function pinXY(k,def){return (PINPOS[k]&&PINPOS[k].length===2)?PINPOS[k]:def}
@@ -745,7 +747,9 @@
     this.textContent=showFacil?"トイレ・AED：表示中":"トイレ・AEDを表示";
     drawFacilities();
   });
-  $("#editPins").addEventListener("click",function(){
+  // ピン位置の再調整用（通常は #editPins を非表示にしている。開発時はHTMLの display:none を外す）
+  var _ep=$("#editPins");
+  if(_ep)_ep.addEventListener("click",function(){
     editMode=!editMode;this.classList.toggle("on",editMode);
     this.textContent=editMode?"調整モード ON（ピンをドラッグ）":"ピン位置を調整";
     if(editMode&&!showFacil){showFacil=true;$("#facilBtn").classList.add("on");$("#facilBtn").textContent="トイレ・AED：表示中"}
