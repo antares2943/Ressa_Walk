@@ -1,35 +1,74 @@
 <!doctype html>
+<!--
+  ============================================================================
+   レッサーウォーク（Ressa Walk）  index.html
+   鯖江市オープンデータ活用アプリコンテスト2026 応募作品
+   「西山公園を福井県を代表する観光地にするアプリ」
+  ----------------------------------------------------------------------------
+   ■この1ファイルの構成（上から順に）
+     1. <head> … 文字コード・表示設定・フォント/Leaflet読み込み・<style>（全CSS）
+     2. <body> の #app … スマホ画面を模した枠。中身は5つの画面(section)＋共通部品
+          ・ヘッダー（.head）     … アプリ名／現在地／データ種別バッジ
+          ・ビュー(.views)        … 5タブ分の画面を切り替えて表示
+              #v-home     ホーム（混雑サイン・見どころ・川柳・意見箱）
+              #v-hana     花ごよみ（案内図マップにツツジ/紅葉/トイレ/AED）
+              #v-konzatsu 混雑&アクセス（実データのグラフ）
+              #v-dex      推しレッサー（レッサーパンダ図鑑・写真ランキング）
+              #v-kaiyu    ガイド（基本情報・周辺・来訪者の居住地）
+          ・下タブバー(.tabbar) ／ トースト ／ モーダル ／ 画像拡大(lightbox)
+     3. <script> … Leaflet本体 → アプリ本体（1つのJS。末尾の init で起動）
+   ■データの考え方
+     ・表示内容は鯖江市オープンデータ(CC BY)に基づく。重い通信を避けるため、
+       集計済みの値をJS内の定数(REAL_DATA 等)として同梱している。
+     ・写真/いいね/川柳/意見は現状「デモ（端末内のlocalStorageに保存）」。
+       本番でサーバー共有する場合の差し込み口(PHOTO_API)も用意してある。
+   ■保存キー(localStorage) 一覧
+     ressawalk_met_v1       … 「会えた」スタンプ
+     ressawalk_photos_v1    … 投稿写真（デモ）
+     ressawalk_likes_v1     … 写真へのいいね
+     ressawalk_senryu_v1    … 投稿川柳（デモ）／ _senryulikes_v1 … 川柳いいね
+     ressawalk_opinions_v1  … 意見箱の投稿
+     ressawalk_pinpos       … 開発用：ピン位置の手修正（通常ボタンは非表示）
+  ============================================================================
+-->
 <html lang="ja">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8"><!-- 文字コードはUTF-8。日本語が文字化けしないための宣言 -->
+<!-- スマホで等倍表示。viewport-fit=cover はノッチ付き端末で端まで使うため -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>レッサーウォーク</title>
+<!-- Google Fonts（明朝/ゴシック/英字）を先読み。ネットが無い環境では標準フォントに自動フォールバック -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Outfit:wght@500;600;700&display=swap">
+<!-- 地図ライブラリ Leaflet のCSS。lib/ 内に同梱（オフラインでも動く） -->
 <link rel="stylesheet" href="./lib/leaflet.css">
+<!-- ここから下は全てこのアプリの見た目(CSS)。クラス名ごとにスタイルを定義 -->
 <style>
+  /* CSS変数（配色とフォント）。ここの色を変えると全体の見た目が一括で変わる。
+     明るい既定テーマ。暗い端末向けの色は下の @media(dark) で上書きする。 */
   :root{
-    --paper:#E9E0D2;
-    --surface:#FFFCF7;
-    --surface-2:#F4ECE1;
-    --ink:#2A211B;
-    --ink-soft:#5C5047;
-    --muted:#8C7E70;
-    --line:#E4D8C8;
-    --rust:#B24A25;
-    --azalea:#C24A72;
-    --garden:#4E7A46;
-    --maple:#C57726;
-    --sky:#5C8AA6;
-    --gold:#C9A24A;
-    --calm:#4E8A4E;
-    --mid:#C58A26;
-    --busy:#C24338;
-    --display:"Shippori Mincho B1",serif;
-    --body:"Zen Kaku Gothic New",sans-serif;
-    --latin:"Outfit",sans-serif;
+    --paper:#E9E0D2;      /* 背景（いちばん外側の紙色） */
+    --surface:#FFFCF7;    /* カード等の面の色 */
+    --surface-2:#F4ECE1;  /* 一段沈んだ面の色 */
+    --ink:#2A211B;        /* 本文の濃い文字色 */
+    --ink-soft:#5C5047;   /* やや薄い文字色 */
+    --muted:#8C7E70;      /* 補足・注釈の薄い文字色 */
+    --line:#E4D8C8;       /* 枠線・区切り線 */
+    --rust:#B24A25;       /* アクセント（レッサーの赤茶／選択中） */
+    --azalea:#C24A72;     /* ツツジのピンク */
+    --garden:#4E7A46;     /* 庭園の緑 */
+    --maple:#C57726;      /* 紅葉のオレンジ */
+    --sky:#5C8AA6;        /* 空・水色（トイレピン等） */
+    --gold:#C9A24A;       /* 金系 */
+    --calm:#4E8A4E;       /* 混雑サイン：すいている（緑） */
+    --mid:#C58A26;        /* 混雑サイン：平均（黄） */
+    --busy:#C24338;       /* 混雑サイン：混む（赤） */
+    --display:"Shippori Mincho B1",serif;   /* 見出し用の明朝 */
+    --body:"Zen Kaku Gothic New",sans-serif; /* 本文用のゴシック */
+    --latin:"Outfit",sans-serif;             /* 数字・英字用 */
   }
+  /* 端末がダークモードのときの色（ユーザーがライト固定にしていなければ適用） */
   @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
     --paper:#0E0B09;--surface:#221C18;--surface-2:#2B231D;
     --ink:#EDE3D7;--ink-soft:#C3B6A7;--muted:#948676;--line:#3A2F27;
@@ -42,17 +81,20 @@
     --rust:#DE7845;--azalea:#E07BA0;--garden:#7FAE71;--maple:#E0993F;--sky:#87AEC6;--gold:#D9B85E;
     --calm:#6FB56F;--mid:#E0AA4A;--busy:#E0685C;
   }
+  /* 全要素：幅計算に枠線を含める／タップ時の青いハイライトを消す */
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
+  /* 画面全体を中央寄せ（PCでもスマホ枠を中央に表示するため） */
   body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
     display:flex;align-items:center;justify-content:center;line-height:1.7;-webkit-font-smoothing:antialiased}
 
+  /* #app = スマホ画面の枠本体。幅430pxまで・縦は画面いっぱい(最大920px)・縦並びの箱 */
   #app{width:100%;max-width:430px;height:100dvh;max-height:920px;background:var(--surface);
     display:flex;flex-direction:column;overflow:hidden;position:relative;
     box-shadow:0 30px 60px -20px rgba(30,18,10,.5)}
-  @media (min-width:460px){#app{border-radius:30px}}
+  @media (min-width:460px){#app{border-radius:30px}} /* PC等の広い画面では角を丸めてスマホ風に */
 
-  /* header */
+  /* ===== ヘッダー（画面上部：アプリ名・現在地・データバッジ） ===== */
   .head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
     padding:16px 18px 12px;background:var(--surface);border-bottom:1px solid var(--line);z-index:5}
   .head .brand{display:flex;align-items:center;gap:9px}
@@ -61,26 +103,27 @@
   .head .loc svg{width:13px;height:13px}
   .logo{width:30px;height:30px}
 
-  /* views */
+  /* ===== ビュー（各タブの中身。縦スクロール領域） ===== */
   .views{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
-  .view{display:none;padding:16px 16px 26px;animation:fade .28s ease}
-  .view.on{display:block}
-  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-  @media (prefers-reduced-motion:reduce){.view{animation:none}}
+  .view{display:none;padding:16px 16px 26px;animation:fade .28s ease} /* 既定は非表示 */
+  .view.on{display:block} /* .on が付いたタブだけ表示（JSのgo()が付け替える） */
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}} /* タブ切替のふわっと表示 */
+  @media (prefers-reduced-motion:reduce){.view{animation:none}} /* 動きを減らす設定の端末ではアニメ無効 */
 
-  .sc-title{font-family:var(--display);font-weight:700;font-size:20px;margin:2px 2px 14px}
+  .sc-title{font-family:var(--display);font-weight:700;font-size:20px;margin:2px 2px 14px} /* 各画面の大見出し */
 
+  /* 汎用カード（情報のまとまりを囲む箱）。.hi は白く浮かせた強調カード／.lbl は小見出しラベル */
   .card{background:var(--surface-2);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:13px}
   .card.hi{background:var(--surface);box-shadow:0 3px 10px -6px rgba(40,25,15,.3)}
   .lbl{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--muted);margin-bottom:9px}
 
-  /* home hello */
+  /* ===== ホーム：あいさつ行（パンダ顔＋天気メッセージ） ===== */
   .hello{display:flex;align-items:center;gap:13px;margin:2px 2px 16px}
   .hello .msg{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.4}
   .hello .sub{font-size:12px;color:var(--ink-soft);margin-top:2px}
   .pandaface{width:52px;height:52px;flex:0 0 auto}
 
-  /* signal */
+  /* ===== 混雑サイン（◎○△ の記号と色。すいている/平均/混む） ===== */
   .signal-row{display:flex;gap:9px}
   .sig{flex:1;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:11px 4px}
   .sig .t{font-size:11px;color:var(--ink-soft);margin-bottom:5px}
@@ -98,7 +141,8 @@
   .bloom .meta{font-size:12px;color:var(--ink-soft);margin-top:2px}
   .badge{display:inline-block;font-size:10px;font-weight:700;color:#fff;border-radius:5px;padding:1px 6px;margin-left:5px;vertical-align:middle}
 
-  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  /* ===== ホーム：見どころ行＋各タブへのタイル（2×2のショートカット） ===== */
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px} /* 2列グリッド */
   .spotrow{display:flex;align-items:center;gap:12px;padding:8px 0}
   .spotrow+.spotrow{border-top:1px solid var(--line)}
   .spoticon{width:46px;height:46px;border-radius:12px;flex:0 0 auto;object-fit:cover;background:var(--line);box-shadow:inset 0 0 0 3px rgba(255,255,255,.3)}
@@ -113,12 +157,12 @@
   .bg-rust{background:var(--rust)}.bg-az{background:var(--azalea)}.bg-sky{background:var(--sky)}
   .bg-garden{background:var(--garden)}.bg-maple{background:var(--maple)}.bg-ink{background:var(--ink-soft)}
 
-  /* segmented control */
+  /* ===== セグメント切替（「春ツツジ / 秋紅葉」のような2択トグル） ===== */
   .seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:4px;gap:4px;margin-bottom:14px}
   .seg button{flex:1;border:none;background:transparent;font-family:var(--body);font-weight:700;font-size:12.5px;color:var(--ink-soft);padding:8px 4px;border-radius:8px;cursor:pointer;transition:all .15s}
   .seg button.on{background:var(--rust);color:#fff}
 
-  /* season / flower */
+  /* ===== 花ごよみ：見出しタグ・（旧）簡易マップ・凡例など ===== */
   .nowtag{font-size:11px;color:var(--ink-soft);font-weight:700;margin:-4px 2px 12px;display:flex;align-items:center;gap:6px}
   .dotc{width:9px;height:9px;border-radius:50%;display:inline-block}
   .map{position:relative;border-radius:15px;overflow:hidden;border:1px solid var(--line);margin-bottom:10px;aspect-ratio:300/175}
@@ -138,7 +182,7 @@
   .brow .m{font-size:11px;color:var(--ink-soft)}
   .brow .st{margin-left:auto;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap}
 
-  /* crowd chart */
+  /* ===== 混雑グラフ：曜日別の棒グラフ（.bar の高さで来訪者数を表現） ===== */
   .chart{display:flex;align-items:flex-end;gap:5px;height:160px;padding:6px 2px 0;margin-bottom:6px}
   .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
   .col .bar{width:100%;border-radius:5px 5px 3px 3px;transition:height .4s cubic-bezier(.3,1,.4,1)}
@@ -146,7 +190,8 @@
   .bar.calm{background:var(--calm)}.bar.mid{background:var(--mid)}.bar.busy{background:var(--busy)}
   .bar.wk{background:var(--sky)}.bar.we{background:var(--azalea)}
 
-  /* flower map (Leaflet + OpenStreetMap) */
+  /* ===== 花ごよみマップ（Leaflet）：案内図画像の上に置くピン・ツールチップの見た目 =====
+     #flowerMap が地図本体。.bpin=花ピン、.ficon.toilet=トイレ、.ficon.aed=AED。*/
   .mapswitch{display:flex;gap:7px;overflow-x:auto;padding:0 0 10px;-webkit-overflow-scrolling:touch}
   .mapchip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-soft);font-family:var(--body);font-weight:700;font-size:12px;padding:7px 13px;border-radius:999px;cursor:pointer;white-space:nowrap}
   .mapchip.on{background:var(--rust);color:#fff;border-color:var(--rust)}
@@ -170,7 +215,7 @@
   .babytip{background:var(--azalea);color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;padding:2px 7px;box-shadow:0 1px 4px rgba(0,0,0,.35);white-space:nowrap}
   .babytip::before{border-bottom-color:var(--azalea)!important}
   .ficon.aed{width:28px;height:18px;border-radius:5px;background:var(--busy);font-size:9px}
-  /* access (さんぽタブ) */
+  /* ===== アクセス情報（電車/車/バス/所在地の行） ===== */
   .acc{display:flex;flex-direction:column;gap:11px;margin-bottom:10px}
   .accrow{display:grid;grid-template-columns:48px 1fr;gap:11px;align-items:start;font-size:13px;line-height:1.65;color:var(--ink-soft)}
   .accrow b{color:var(--ink)}
@@ -195,12 +240,12 @@
   .reflink{display:inline-block;margin-top:12px;font-size:12.5px;font-weight:700;color:var(--rust);text-decoration:none}
   .reflink:hover{text-decoration:underline}
 
-  /* data badge */
+  /* ===== データバッジ（ヘッダー右：「実データ」緑／「サンプル」橙） ===== */
   .dbadge{font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
   .dbadge.ok{color:var(--garden);border-color:color-mix(in srgb,var(--garden) 40%,transparent);background:color-mix(in srgb,var(--garden) 13%,transparent)}
   .dbadge.spl{color:var(--maple);border-color:color-mix(in srgb,var(--maple) 40%,transparent);background:color-mix(in srgb,var(--maple) 13%,transparent)}
 
-  /* horizontal bars (real data) */
+  /* ===== 横棒グラフ（天気別の来訪者数・居住地割合などに使用） ===== */
   .hbars{display:flex;flex-direction:column;gap:8px}
   .hbar{display:grid;grid-template-columns:56px 1fr 56px;align-items:center;gap:9px;font-size:12px}
   .chart .cnum{font-weight:700;color:var(--ink-soft);font-variant-numeric:tabular-nums;font-family:var(--latin);font-size:9.5px}
@@ -213,7 +258,7 @@
   .reco .rd{font-size:13.5px;font-weight:700}
   .basis{font-size:10.5px;color:var(--muted);text-align:center;margin-top:4px}
 
-  /* panda dex */
+  /* ===== 推しレッサー：きょうの推し(.pick)＋図鑑グリッド(.dex/.pcard) ===== */
   .pick{display:flex;gap:13px;align-items:center;background:linear-gradient(120deg,color-mix(in srgb,var(--rust) 15%,var(--surface)),var(--surface));border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:15px}
   .pick .av{width:60px;height:60px;flex:0 0 auto}
   img.av{object-fit:cover;border-radius:50%;background:var(--line);display:block}
@@ -231,7 +276,7 @@
   .pcard .chk{position:absolute;top:6px;left:6px;width:17px;height:17px;border-radius:50%;background:var(--rust);color:#fff;display:none;align-items:center;justify-content:center}
   .pcard.met .chk{display:flex}
   .pcard .chk svg{width:11px;height:11px}
-  /* photo upload & gallery */
+  /* ===== 投稿フォーム共通（写真・川柳・意見箱で使う入力ボックス/ボタン） ===== */
   .uploadbox{background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
   .upinput{font-family:var(--body);font-size:13px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);width:100%}
   .upfile{display:flex;align-items:center;justify-content:center;gap:8px;border:1px dashed var(--rust);color:var(--rust);border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;text-align:center}
@@ -240,7 +285,7 @@
   .upbtn:disabled{opacity:.5;cursor:default}
   .uphint{font-size:11.5px;color:var(--muted);text-align:center;min-height:14px}
   .photogrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  /* 今月の写真ランキング */
+  /* ===== 今月の写真ランキング（.rankrow＝順位行、.rankno＝金銀銅、lightbox＝拡大） ===== */
   .rankrow{display:flex;align-items:center;gap:11px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:8px 11px;margin-bottom:9px}
   .rankno{width:28px;height:28px;flex:0 0 auto;border-radius:50%;background:var(--ink-soft);color:#fff;font-family:var(--latin);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
   .rankno.g{background:#D9A400}.rankno.s{background:#9AA3AD}.rankno.b{background:#B5793A}
@@ -274,7 +319,7 @@
   .likebtn:active{transform:scale(.94)}
   .photoempty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:12px;padding:18px;border:1px dashed var(--line);border-radius:12px}
 
-  /* 西山川柳ランキング */
+  /* ===== 西山川柳ランキング（.senrow＝句の行、.senku＝句本体＋作者） ===== */
   .senrow{display:flex;align-items:center;gap:11px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:9px}
   .senku{flex:1 1 auto;min-width:0}
   .senku .sk{font-family:var(--display);font-weight:700;font-size:16px;color:var(--ink);line-height:1.55;word-break:break-word}
@@ -282,12 +327,13 @@
   .senrow .likebtn{flex:0 0 auto}
   .senotherbtn{width:100%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-soft);font-family:var(--body);font-weight:700;font-size:13px;padding:10px;border-radius:11px;cursor:pointer;margin:2px 0 14px}
 
+  /* ===== スタンプ進捗バー（会えたレッサー ○/8 の達成度） ===== */
   .stampbar{margin-top:14px;background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:12px 14px}
   .stampbar .sh{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;margin-bottom:8px}
   .track{height:9px;background:var(--line);border-radius:5px;overflow:hidden}
   .track i{display:block;height:100%;background:var(--rust);border-radius:5px;transition:width .5s cubic-bezier(.3,1,.4,1)}
 
-  /* kaiyu */
+  /* ===== ガイドタブ：モデルコース・クーポン等の装飾（一部は未使用の予備スタイル） ===== */
   .course{display:flex;flex-direction:column;gap:0;margin-bottom:14px}
   .stop{display:flex;gap:13px;align-items:flex-start;position:relative;padding-bottom:16px}
   .stop:not(:last-child)::before{content:"";position:absolute;left:13px;top:26px;bottom:0;width:2px;background:var(--line)}
@@ -299,16 +345,17 @@
   .coupon .ct{font-weight:700;font-size:12.5px}
   .coupon .cs{font-size:10.5px;color:var(--ink-soft)}
 
+  /* ===== 出典表示（オープンデータの出どころを小さく明記する枠） ===== */
   .datasrc{margin-top:8px;font-size:10.5px;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;line-height:1.6}
   .datasrc b{color:var(--ink-soft)}
 
-  /* tabbar */
+  /* ===== 下タブバー（画面下の5つのタブ。.tab.on が選択中） ===== */
   .tabbar{flex:0 0 auto;display:flex;justify-content:space-around;align-items:center;padding:8px 4px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface);z-index:5}
   .tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:9.5px;font-weight:700;background:none;border:none;cursor:pointer;padding:4px 4px;font-family:var(--body);white-space:nowrap}
   .tab svg{width:22px;height:22px}
   .tab.on{color:var(--rust)}
 
-  /* toast + modal */
+  /* ===== 共通部品：トースト（一時メッセージ）・下から出るモーダル(.sheet)・画像拡大(.lightbox) ===== */
   #toast{position:absolute;left:50%;bottom:80px;transform:translateX(-50%) translateY(20px);
     background:var(--ink);color:var(--surface);font-size:12.5px;font-weight:700;padding:10px 18px;border-radius:999px;
     opacity:0;pointer-events:none;transition:all .3s;z-index:20;max-width:82%;text-align:center}
@@ -330,7 +377,9 @@
 </style>
 </head>
 <body>
+<!-- #app = スマホ画面の枠。中は「ヘッダー → ビュー(5画面) → 下タブバー → 共通部品」の縦並び -->
 <div id="app">
+  <!-- ヘッダー：左にロゴ＋アプリ名、右に現在地「西山公園」とデータ種別バッジ(#dataBadge) -->
   <div class="head">
     <div class="brand">
       <svg class="logo" viewBox="0 0 100 100"><circle cx="50" cy="54" r="30" fill="#B24A25"/><circle cx="50" cy="56" r="21" fill="#F4E4D0"/><path d="M22 34 Q18 14 34 22 Q40 28 34 38 Z" fill="#B24A25"/><path d="M78 34 Q82 14 66 22 Q60 28 66 38 Z" fill="#B24A25"/><circle cx="40" cy="52" r="4.6" fill="#2A211B"/><circle cx="60" cy="52" r="4.6" fill="#2A211B"/><path d="M50 60 l-5 4 h10 Z" fill="#2A211B"/></svg>
@@ -342,18 +391,22 @@
     </div>
   </div>
 
+  <!-- ビュー領域：5つの<section>を重ね、.on が付いた1つだけを表示（JSのgo()が切替） -->
   <div class="views">
-    <!-- HOME -->
+    <!-- ============ ① ホーム画面（最初に表示） ============ -->
     <section class="view on" id="v-home">
+      <!-- あいさつ行：パンダの顔アイコン＋ひとことメッセージ -->
       <div class="hello">
         <svg class="pandaface" viewBox="0 0 100 100"><circle cx="50" cy="54" r="30" fill="#B24A25"/><circle cx="50" cy="56" r="21" fill="#F4E4D0"/><path d="M22 34 Q18 14 34 22 Q40 28 34 38 Z" fill="#B24A25"/><path d="M78 34 Q82 14 66 22 Q60 28 66 38 Z" fill="#B24A25"/><circle cx="40" cy="52" r="4.6" fill="#2A211B"/><circle cx="60" cy="52" r="4.6" fill="#2A211B"/><path d="M50 60 l-5 4 h10 Z" fill="#2A211B"/></svg>
         <div><div class="msg">今日も西山へ？</div><div class="sub">晴れ 24℃ ／ 絶好のおでかけ日和です</div></div>
       </div>
+      <!-- 今日の混みぐあい：JSのapplyHome()が曜日別平均から◎○△を #homeSignal に描画 -->
       <div class="card hi">
         <div class="lbl">今日の混みぐあい（実データ・曜日平均）</div>
         <div id="homeSignal" class="sig" style="border:none;background:none;padding:2px 0"><div class="mk" style="font-size:30px">—</div><div class="s" style="font-size:12px">読み込み中…</div></div>
         <div class="sigtip" id="homeTip">曜日別の来園者数（人流データ）から予測します</div>
       </div>
+      <!-- 見どころ：レッサーパンダとツツジ（画像は reference/ 内のオープンデータ由来の写真） -->
       <div class="card hi">
         <div style="font-family:var(--display);font-weight:700;font-size:18px;color:var(--ink);margin-bottom:6px">✨ 西山公園の見どころ</div>
         <div class="spotrow">
@@ -365,8 +418,11 @@
           <div><div class="nm">ツツジ</div><div class="meta">日本海側随一・約5万本（全11種）</div></div>
         </div>
       </div>
+      <!-- 各タブへのショートカットタイル（中身はJSのTILES配列から生成） -->
       <div class="tiles" id="tiles"></div>
 
+      <!-- 西山川柳コーナー：五七五を投稿→「いいね」→今月トップ7=「川柳七福神」 -->
+      <!--   senGrid=ランキング表示／senOther=8位以下／senName・senText=入力欄（JSのinitSenryu()が処理） -->
       <div style="margin:26px 2px 10px;font-family:var(--display);font-weight:700;font-size:22px;color:var(--ink)">🖋 西山川柳</div>
       <div class="uphint" style="text-align:left;margin:0 2px 12px;font-size:12.5px">西山公園・レッサーパンダ・ツツジや紅葉をお題に、五・七・五で一句どうぞ🖋 毎月いちばん「いいね」を集めた7句が、その月の <b>川柳七福神</b> です。目指せ七福神入り！</div>
       <div style="margin:4px 2px 12px;font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink);line-height:1.4">🏆 今月の西山川柳ランキング<br><span style="color:var(--rust);font-size:16px">（川柳七福神）</span><br><span id="senWeek" style="font-family:var(--body);font-size:13px;color:var(--muted);font-weight:700"></span></div>
@@ -381,6 +437,7 @@
       </div>
       <div class="uphint" style="text-align:left;margin:8px 2px 0">※これは仮の機能です。投稿内容といいねはこの端末内に保存され、実際には送信されません。本番では鯖江市のサーバーで共有する仕組みを想定しています。</div>
 
+      <!-- 意見箱：来園者の声を集める投稿欄（JSのinitOp()が処理。現状は端末内保存のデモ） -->
       <div style="margin:26px 2px 10px;font-family:var(--display);font-weight:700;font-size:22px;color:var(--ink)">📮 西山公園 意見箱</div>
       <div class="uphint" style="text-align:left;margin:0 2px 10px">西山公園をもっと楽しく・便利にするために、みなさんの声を集めています。「こんな施設がほしい」「ここが不便」「こんなイベントがあったら」など、気づいたことを気軽にお寄せください。いただいた意見は、公園やこのアプリの改善の参考にします。</div>
       <div class="uploadbox">
@@ -393,28 +450,30 @@
       <div class="uphint" style="text-align:left;margin:8px 2px 0">※これは仮の機能です。送信内容はこの端末内に保存され、実際には送信されません。本番では鯖江市へ届く仕組みを想定しています。</div>
     </section>
 
-    <!-- HANAGOYOMI -->
+    <!-- ============ ② 花ごよみ（案内図マップ＋花/施設ピン） ============ -->
     <section class="view" id="v-hana">
       <div class="sc-title">🌸 花ごよみ</div>
+      <!-- 春(ツツジ)/秋(紅葉) の切替。クリックでJSのrenderSeason()が地図とリストを作り直す -->
       <div class="seg" id="seasonSeg">
         <button data-s="spring" class="on">春 ツツジ</button>
         <button data-s="autumn">秋 紅葉</button>
       </div>
-      <div class="nowtag" id="seasonNow"></div>
+      <div class="nowtag" id="seasonNow"></div><!-- 季節の説明文（JSが差し込む） -->
+      <!-- トイレ・AEDピンの表示ON/OFF（JSのfacilBtnハンドラ） -->
       <button type="button" id="facilBtn" class="mapedit">トイレ・AEDを表示</button>
       <!-- 開発用：ピン位置の再調整ボタン。通常は非表示。調整したいときは下の style="display:none" を外す。 -->
       <button type="button" id="editPins" class="mapedit" style="display:none">ピン位置を調整</button>
-      <div id="flowerMap"></div>
-      <div class="maplegend" id="mapLegend"></div>
+      <div id="flowerMap"></div><!-- Leaflet地図本体。案内図画像＋ピン（JSのbuildMap()で生成） -->
+      <div class="maplegend" id="mapLegend"></div><!-- 凡例（JSが差し込む） -->
       <div class="uphint" id="facilNote" style="text-align:left;margin:0 2px 8px;display:none">トイレ8か所は鯖江市オープンデータ「公共トイレ」。AEDは園内の公開データが無いため、緯度経度から算出した<b>園周辺の最寄り（直線距離の目安）</b>を表示（出典：鯖江市オープンデータ「AED」）。位置は案内図に合わせた目安です。<b style="color:var(--azalea)">ピンク</b>のWC＝ベビーベッドあり（おむつ替え可）。</div>
-      <div class="blist" id="bloomList"></div>
+      <div class="blist" id="bloomList"></div><!-- 花の一覧（品種・株数）。JSのrenderSeason()が生成、クリックで地図のピンを選択 -->
       <a class="reflink" href="https://www.city.sabae.fukui.jp/kanko/playing/nishiyama.html" target="_blank" rel="noopener">西山公園の詳しい情報（鯖江市公式サイト）→</a>
     </section>
 
-    <!-- KONZATSU -->
+    <!-- ============ ③ 混雑&アクセス（実データのグラフ） ============ -->
     <section class="view" id="v-konzatsu">
       <div class="sc-title">📊 混雑&amp;アクセス</div>
-      <div id="konzatsuReal"></div>
+      <div id="konzatsuReal"></div><!-- 曜日別・天気別グラフ（JSのrenderKonzatsuReal()が生成） -->
       <div class="card hi" style="margin-top:14px">
         <div class="lbl">西山公園へのアクセス</div>
         <div class="acc">
@@ -427,20 +486,24 @@
       </div>
     </section>
 
-    <!-- DEX -->
+    <!-- ============ ④ 推しレッサー（図鑑＋写真ランキング） ============ -->
     <section class="view" id="v-dex">
       <div class="sc-title">🐾 推しレッサー</div>
+      <!-- きょうの推しレッサー：日付からPANDASを1頭選んで表示（JSのrenderPick()） -->
       <div class="pick">
         <img class="av" id="pickAv" alt="きょうの推しレッサー">
         <div><div class="pl">きょうの推しレッサー</div><div class="pn" id="pickName"></div><div class="pm" id="pickNote"></div></div>
       </div>
-      <div class="dex" id="dex"></div>
+      <div class="dex" id="dex"></div><!-- 8頭の図鑑グリッド（JSのrenderDex()）。カードを押すと詳細モーダル -->
+      <!-- 「会えた」スタンプの達成度バー（JSのupdateMet()が人数と幅を更新） -->
       <div class="stampbar">
         <div class="sh"><span>会えたレッサー</span><span id="metCount">0 / 8</span></div>
         <div class="track"><i id="metTrack" style="width:0%"></i></div>
       </div>
       <div class="datasrc"><b>出典</b>：個体名・生年月日・性別・プロフィールは鯖江市オープンデータ「西山動物園のレッサーパンダ一覧」、写真は鯖江市オープンデータ「レッサーパンダ画像」より（CC BY）。</div>
 
+      <!-- みんなのレッサー写真：投稿→いいね→今月トップ7=「レッサー七福神」 -->
+      <!--   photoGrid=ランキング／otherPhotos=8位以下／下の投稿フォーム(upHandle/upFile)はJSのinitPhoto()が処理 -->
       <div style="margin:24px 2px 10px;font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink)">📸 みんなのレッサー写真</div>
       <div class="uphint" style="text-align:left;margin:0 2px 12px;font-size:12.5px">みんなが撮った西山公園のレッサーパンダ写真を「いいね」で応援📸 毎月いちばん人気の7枚が、その月の <b>レッサー七福神</b> です。目指せ七福神入り！</div>
       <div style="margin:4px 2px 12px;font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink);line-height:1.4">🏆 今月のレッサー写真ランキング<br><span style="color:var(--rust);font-size:16px">（レッサー七福神）</span><br><span id="rankWeek" style="font-family:var(--body);font-size:13px;color:var(--muted);font-weight:700"></span></div>
@@ -458,10 +521,11 @@
       <div class="uphint" style="text-align:left;margin:8px 2px 0">※これは<b>仮の投稿機能</b>です。表示中の写真は<b>動作確認用のサンプル</b>で、実際の投稿ではありません。<b>いいね数も仮の表示</b>（この端末内に保存）です。本番では投稿写真・いいねを別サーバーに保存する想定です。</div>
     </section>
 
-    <!-- KAIYU -->
+    <!-- ============ ⑤ ガイド（基本情報・周辺・来訪者の居住地） ============ -->
     <section class="view" id="v-kaiyu">
       <div class="sc-title">🗺 おでかけガイド</div>
 
+      <!-- 基本情報：料金・開園時間・休園日・所在地（西山動物園公式に基づく固定表示） -->
       <div class="card hi">
         <div class="lbl">基本情報</div>
         <div class="acc">
@@ -501,6 +565,7 @@
         </div>
       </div>
 
+      <!-- 来訪者の居住地：人流データの市区町村別割合（JSのrenderResidenceReal()が横棒で表示） -->
       <div class="nowtag"><span class="dotc" style="background:var(--rust)"></span>来訪者はどこから来ている？（人流データ）</div>
       <div id="residenceReal"></div>
 
@@ -515,19 +580,27 @@
     </section>
   </div>
 
-  <div class="tabbar" id="tabbar"></div>
-  <div id="toast"></div>
-  <div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
-  <div class="lightbox" id="lightbox"><div class="lbinner"><img id="lightImg" alt="レッサーパンダの写真"><div class="lbcap" id="lightCap"></div></div></div>
+  <!-- 共通部品 -->
+  <div class="tabbar" id="tabbar"></div><!-- 下タブ（中身はJSのTABS配列から生成） -->
+  <div id="toast"></div><!-- 一時メッセージ（JSのtoast()が表示） -->
+  <div class="modal" id="modal"><div class="sheet" id="sheet"></div></div><!-- レッサー詳細の下からのシート -->
+  <div class="lightbox" id="lightbox"><div class="lbinner"><img id="lightImg" alt="レッサーパンダの写真"><div class="lbcap" id="lightCap"></div></div></div><!-- 写真の拡大表示 -->
 </div>
 
+<!-- 地図ライブラリ Leaflet 本体（lib/ 内に同梱） -->
 <script src="./lib/leaflet.js"></script>
+<!-- ここから下がアプリ本体のJavaScript（全機能を1つの即時実行関数にまとめている） -->
 <script>
+// 全体を即時実行関数(IIFE)で囲む＝中の変数が外に漏れず、他スクリプトと衝突しない
 (function(){
-  "use strict";
+  "use strict"; // 厳格モード：うっかりミス（未定義変数への代入など）をエラーにする
+  // $（ドル）はquerySelectorの短縮。$("#id") や $(".class") で要素を1つ取得するヘルパー
   var $=function(s,r){return (r||document).querySelector(s)};
 
-  /* ---------- data (鯖江市オープンデータの項目を模した例) ---------- */
+  /* ========== データ定義（花ごよみの季節データ） ==========
+     SEASONS: 春(spring)=ツツジ、秋(autumn)=紅葉。各blooms配列が地図ピン＋一覧の元データ。
+       n=名前, p=場所, k=株数(実データ), st=状態, c=色, xy=案内図上のピクセル座標[x,y],
+       r=ピンの直径(px。株数が多いほど大きい), big=ピン内に出す大きな文字 */
   var SEASONS={
     spring:{img:"guide",now:"西山公園のツツジ 全11種・約5万本（株数は鯖江市オープンデータ）",color:"var(--azalea)",
       legend:[["丸の大きさ＝株数（実データ）",""]],
@@ -557,9 +630,12 @@
         {n:"紅葉スポット⑧",p:"",k:"",c:"var(--rust)",xy:[466,159],r:20,big:"8"}
       ]}
   };
+  // 開花状態→色の対応表（現状は株数表示が中心のため予備的に保持）
   var stColor={"見頃":"var(--azalea)","五分咲き":"var(--maple)","つぼみ":"var(--gold)","開催中":"var(--gold)","色づき始め":"var(--rust)"};
 
-  // 出典：鯖江市オープンデータ「西山動物園のレッサーパンダ一覧」＋個体画像（レッサーパンダ画像）
+  /* ========== データ定義（レッサーパンダ8頭） ==========
+     出典：鯖江市オープンデータ「西山動物園のレッサーパンダ一覧」＋個体画像（レッサーパンダ画像）
+     n=名前, b=生年月日, sex=性別, note=プロフィール, img=写真パス(reference/ressa/) */
   var PANDAS=[
     {n:"たいよう",b:"2013.6.15",sex:"オス",note:"池田動物園から婿入り。",img:"./reference/ressa/taiyo.png"},
     {n:"ライト",b:"2013.7.18",sex:"オス",note:"キラリの息子、かえでの父。西山うまれ。",img:"./reference/ressa/lite.png"},
@@ -571,6 +647,7 @@
     {n:"アケビ",b:"2020.6.29",sex:"メス",note:"仙台市八木山動物公園から来園。",img:"./reference/ressa/akebi.jpg"}
   ];
 
+  // 下タブバーの定義（id=対応する画面, label=表示名, icon=SVGパス）。順番がそのまま並び順
   var TABS=[
     {id:"home",label:"ホーム",icon:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'},
     {id:"hana",label:"花ごよみ",icon:'<circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="12" r="2.4"/>'},
@@ -579,6 +656,7 @@
     {id:"kaiyu",label:"ガイド",icon:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8.01"/>'}
   ];
 
+  // ホームの2×2ショートカットタイル（go=押したら飛ぶ画面, bg=色クラス, icon=SVG）
   var TILES=[
     {go:"hana",label:"花ごよみ",bg:"bg-az",icon:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="5" r="3.2"/><circle cx="12" cy="19" r="3.2"/><circle cx="5" cy="12" r="3.2"/><circle cx="19" cy="12" r="3.2"/>',fill:true},
     {go:"konzatsu",label:"混雑&アクセス",bg:"bg-sky",icon:'<rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="17" y="9" width="4" height="11" rx="1"/>',fill:true},
@@ -586,20 +664,25 @@
     {go:"kaiyu",label:"ガイド",bg:"bg-garden",icon:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8.01"/>',fill:false}
   ];
 
+  // パンダの顔SVGを文字列で返す（画像が無い箇所のフォールバック用）
   var pandaSVG=function(alt){var col=alt?"#C0562C":"#B24A25";return '<svg class="av" viewBox="0 0 100 100"><circle cx="50" cy="54" r="30" fill="'+col+'"/><circle cx="50" cy="56" r="21" fill="#F4E4D0"/><path d="M22 34 Q18 14 34 22 Q40 28 34 38 Z" fill="'+col+'"/><path d="M78 34 Q82 14 66 22 Q60 28 66 38 Z" fill="'+col+'"/><circle cx="40" cy="52" r="4.6" fill="#2A211B"/><circle cx="60" cy="52" r="4.6" fill="#2A211B"/><path d="M50 60 l-5 4 h10 Z" fill="#2A211B"/></svg>'};
+  // 線画アイコン用のSVG枠。中身(inner)のpath等を24x24のSVGで包んで返す
   var svgWrap=function(inner){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>'};
 
-  /* ---------- storage ---------- */
+  /* ========== 保存（スタンプ） ==========
+     「会えた」スタンプを localStorage(ressawalk_met_v1) に {名前:1} で保存。met が現在の状態 */
   var MET_KEY="ressawalk_met_v1";
   var met={};
-  try{met=JSON.parse(localStorage.getItem(MET_KEY)||"{}")||{}}catch(e){met={}}
-  var saveMet=function(){try{localStorage.setItem(MET_KEY,JSON.stringify(met))}catch(e){}};
+  try{met=JSON.parse(localStorage.getItem(MET_KEY)||"{}")||{}}catch(e){met={}} // 起動時に読み込み（壊れていても空で続行）
+  var saveMet=function(){try{localStorage.setItem(MET_KEY,JSON.stringify(met))}catch(e){}}; // 変更を書き戻す
 
-  /* ---------- toast ---------- */
+  /* ========== トースト（画面下に2秒だけ出る小さな通知） ========== */
   var toastT;
   function toast(msg){var t=$("#toast");t.innerHTML=msg;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove("show")},2000)}
 
-  /* ---------- navigation ---------- */
+  /* ========== 画面切替（タブのナビゲーション） ==========
+     id の画面だけに .on を付けて表示し、対応タブを選択状態にする。先頭へスクロール。
+     花ごよみを開いた時は、地図をまだ作っていなければ作成、作ってあればサイズ再計算する。 */
   function go(id){
     var views=document.querySelectorAll(".view");for(var i=0;i<views.length;i++)views[i].classList.remove("on");
     $("#v-"+id).classList.add("on");
@@ -608,7 +691,8 @@
     if(id==="hana"){setTimeout(function(){if(!flowerMap){buildMap()}else{flowerMap.invalidateSize();drawMarkers()}},60)}
   }
 
-  /* ---------- render: tabbar & tiles ---------- */
+  /* ========== 下タブバーとホームのタイルを生成 ==========
+     TABS/TILES配列をループして、ボタン要素を動的に作りクリックでgo()を呼ぶようにする */
   (function(){
     var tb=$("#tabbar");
     TABS.forEach(function(t){
@@ -623,7 +707,9 @@
     });
   })();
 
-  /* ---------- render: 花ごよみ ---------- */
+  /* ========== 花ごよみ（地図とピン） ==========
+     curSeason=今の季節。flowerMap=Leaflet地図本体。markerLayer=花ピン層、facilityLayer=トイレ/AED層。
+     showFacil=施設ピンを出しているか。editMode=開発用のピン位置調整モード（通常false）。 */
   var curSeason="spring";
   var flowerMap=null,markerLayer=null,markers=[],illustCfg=null,facilityLayer=null,showFacil=false,editMode=false;
   // ピン位置の手修正を保存（localStorage）。トイレ/AEDは春秋で共通キーのため両方に反映される。
@@ -632,7 +718,9 @@
   function savePin(k,x,y){PINPOS[k]=[x,y];try{localStorage.setItem("ressawalk_pinpos",JSON.stringify(PINPOS))}catch(e){}}
   function pinXY(k,def){return (PINPOS[k]&&PINPOS[k].length===2)?PINPOS[k]:def}
   function facXY(e,key,label){var p=e.target.getLatLng();var x=Math.round(p.lng),y=Math.round((curImg?curImg.h:0)-p.lat);savePin(key,x,y);toast(label+" → 保存しました ["+x+","+y+"]")}
-  // 鯖江市オープンデータ（公共トイレ／AED）より。位置は案内図に合わせた目安（xyは案内図ピクセル）。
+  /* 施設データ（鯖江市オープンデータ：公共トイレ／AED）。
+     toilets=園内8か所（m=内訳, baby=ベビーベッド有）。aeds=園周辺の最寄り3件（直線距離の目安）。
+     xy=案内図画像上のピクセル座標。 */
   var FACILITIES={
     toilets:[
       {n:"中央広場",m:"男6・女5・多目的1・ベビーベッド",baby:true,xy:[378,320]},
@@ -650,9 +738,10 @@
       {n:"鯖江市嚮陽会館",m:"約450m・南西の入口付近",xy:[95,60]}
     ]
   };
+  // トイレ・AEDのピンを地図に描く（showFacilがtrueのときだけ）。y座標は画像高さから引いて上下反転
   function drawFacilities(){
     if(!facilityLayer)return;
-    facilityLayer.clearLayers();
+    facilityLayer.clearLayers(); // いったん全消ししてから描き直す
     var note=$("#facilNote");if(note)note.style.display=showFacil?"block":"none";
     if(!showFacil||!curImg)return;
     FACILITIES.toilets.forEach(function(t){
@@ -671,17 +760,19 @@
       if(editMode)m.on("dragend",function(e){facXY(e,"a:"+a.n,"AED "+a.n)});
     });
   }
-  var PARK=[35.9535,136.1808];
+  var PARK=[35.9535,136.1808]; // 西山公園のおおよその緯度経度（予備）
   var GSI='<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>';
+  // 地図の背景に使う画像（鯖江市の案内図/紅葉マップ）。w,h=画像の実寸ピクセル、attr=出典表記
   var IMAGES={
     guide:{url:"./reference/西山公園案内図.png",w:660,h:642,attr:"公園案内図 &copy; 鯖江市"},
     koyo:{url:"./reference/西山公園紅葉マップ.png",w:550,h:648,attr:"紅葉マップ &copy; 鯖江市"}
   };
-  var curImg=null;
+  var curImg=null; // 今表示中の背景画像情報
 
+  // 地図を初期化する。Leafletを「画像をそのまま座標系にする」モード(CRS.Simple)で使い、案内図を重ねる
   function buildMap(){
-    if(typeof L==="undefined"){$("#flowerMap").innerHTML='<div class="mapfallback">地図の表示にはネット接続が必要です。<br>下のリストで確認できます。</div>';return}
-    var img=IMAGES[SEASONS[curSeason].img];curImg=img;
+    if(typeof L==="undefined"){$("#flowerMap").innerHTML='<div class="mapfallback">地図の表示にはネット接続が必要です。<br>下のリストで確認できます。</div>';return} // Leaflet未読込なら代替文
+    var img=IMAGES[SEASONS[curSeason].img];curImg=img; // 季節に対応する背景画像を選ぶ
     if(flowerMap){flowerMap.remove();flowerMap=null;markerLayer=null}
     var bounds=[[0,0],[img.h,img.w]];
     flowerMap=L.map("flowerMap",{crs:L.CRS.Simple,minZoom:-2,maxZoom:3,zoomControl:true,attributionControl:true});
@@ -694,13 +785,15 @@
     facilityLayer=L.layerGroup().addTo(flowerMap);
     drawMarkers();drawFacilities();
   }
+  // 案内図のピクセル座標[x,y]をLeafletの座標[lat,lng]に変換（yは上下反転が必要）
   function bloomLatLng(b){
     if(!curImg||!b.xy)return null;
     return [curImg.h-b.xy[1],b.xy[0]];
   }
+  // 花のピンを地図に描く。株数に応じた大きさの丸を置き、クリックでselectBloom()で選択
   function drawMarkers(){
     if(!flowerMap||!markerLayer)return;
-    markerLayer.clearLayers();markers=[];
+    markerLayer.clearLayers();markers=[]; // 一度消して描き直す
     SEASONS[curSeason].blooms.forEach(function(b,i){
       var xy=pinXY("b:"+curSeason+":"+b.n,b.xy);
       if(!curImg||!xy){markers[i]=null;return}
@@ -715,6 +808,7 @@
       markers[i]=m;
     });
   }
+  // 季節(s)を切り替えて、説明文・凡例・花の一覧・地図を作り直す
   function renderSeason(s){
     curSeason=s;var data=SEASONS[s];
     $("#seasonNow").innerHTML='<span class="dotc" style="background:'+data.color+'"></span>'+data.now;
@@ -729,6 +823,7 @@
     });
     if(flowerMap)buildMap();
   }
+  // 花をi番目に選択：一覧と地図ピンの両方を強調表示し、地図をそのピンへ移動＋トースト表示
   function selectBloom(i){
     var b=SEASONS[curSeason].blooms[i];
     Array.prototype.slice.call(document.querySelectorAll("#bloomList .brow")).forEach(function(r){r.classList.toggle("sel",+r.getAttribute("data-i")===i)});
@@ -736,12 +831,14 @@
     if(flowerMap&&markers[i]){flowerMap.panTo(markers[i].getLatLng());}
     toast(b.n+"（"+b.p+"・"+b.k+"）");
   }
+  // 「春/秋」切替ボタンのクリック処理：押したボタンをonにして、その季節を描画
   Array.prototype.slice.call($("#seasonSeg").children).forEach(function(btn){
     btn.addEventListener("click",function(){
       Array.prototype.slice.call($("#seasonSeg").children).forEach(function(b){b.classList.remove("on")});
       btn.classList.add("on");renderSeason(btn.getAttribute("data-s"));
     });
   });
+  // 「トイレ・AEDを表示」ボタン：施設ピンの表示ON/OFFを切り替える
   $("#facilBtn").addEventListener("click",function(){
     showFacil=!showFacil;this.classList.toggle("on",showFacil);
     this.textContent=showFacil?"トイレ・AED：表示中":"トイレ・AEDを表示";
@@ -756,13 +853,15 @@
     drawMarkers();drawFacilities();
   });
 
-  /* ---------- render: 図鑑 ---------- */
+  /* ========== 推しレッサー（図鑑） ========== */
+  // きょうの推し：日付(1〜31)を頭数で割った余りで1頭を選ぶ＝日替わりで変わる
   function renderPick(){
     var p=PANDAS[(new Date().getDate())%PANDAS.length];
     var a=$("#pickAv");if(a)a.src=encodeURI(p.img);
     var n=$("#pickName");if(n)n.textContent=p.n;
     var t=$("#pickNote");if(t)t.textContent=p.note;
   }
+  // 図鑑グリッドを描く。今月が誕生月の子に「お誕生月」バッジ、会えた子に✓。カード押下で詳細モーダル
   function renderDex(){
     var thisMonth=new Date().getMonth()+1;
     $("#dex").innerHTML=PANDAS.map(function(p,i){
@@ -777,11 +876,13 @@
     });
     renderPick();updateMet();
   }
+  // 「会えた ○/8」のカウントと進捗バーの幅を更新
   function updateMet(){
     var n=PANDAS.filter(function(p){return met[p.n]}).length;
     $("#metCount").textContent=n+" / "+PANDAS.length;
     $("#metTrack").style.width=Math.round(n/PANDAS.length*100)+"%";
   }
+  // レッサーパンダの詳細を下からのシート(モーダル)で開く。ボタンで「会えた」スタンプをトグル保存
   function openPanda(i){
     var p=PANDAS[i];var isMet=!!met[p.n];
     $("#sheet").innerHTML='<div class="grab"></div>'+
@@ -797,20 +898,25 @@
       saveMet();renderDex();closeModal();
     });
   }
-  function closeModal(){$("#modal").classList.remove("show")}
-  $("#modal").addEventListener("click",function(e){if(e.target===$("#modal"))closeModal()});
+  function closeModal(){$("#modal").classList.remove("show")} // モーダルを閉じる
+  $("#modal").addEventListener("click",function(e){if(e.target===$("#modal"))closeModal()}); // 背景の暗い所を押したら閉じる
 
 
-  /* ---------- real open data (鯖江市CKAN CSV) ---------- */
+  /* ========== 混雑・来訪者の実データ ==========
+     REAL=実際に使う集計データ。REAL_DATAに「集計済みの結果」を直接持たせている。
+     （loadCSV/computeReal はCSVから集計する関数だが、現状はfetchを避け同梱データを使用） */
   var REAL=null;
-  // 鯖江市オープンデータ（【日別】西山公園東側来訪者数・市区町村別割合）を集計してアプリに同梱
+  /* 鯖江市オープンデータ（【日別】西山公園東側来訪者数・市区町村別割合）を事前集計して同梱。
+     dow=曜日別平均、weatherArr=天気別平均、residence=居住地割合、overallAvg=全体平均、days=集計日数 */
   var REAL_DATA={"days":365,"overallAvg":390,"dow":{"月":436,"火":352,"水":334,"木":314,"金":289,"土":539,"日":469},"weatherArr":[{"k":"晴","a":483,"c":195},{"k":"曇","a":370,"c":7},{"k":"雨","a":303,"c":132},{"k":"雪","a":182,"c":31}],"residence":[{"city":"福井県鯖江市","pct":52},{"city":"福井県越前市","pct":19},{"city":"福井県福井市","pct":18},{"city":"福井県丹生郡越前町","pct":5},{"city":"福井県坂井市","pct":4},{"city":"福井県南条郡南越前町","pct":1},{"city":"福井県吉田郡永平寺町","pct":1}]};
 
+  // ヘッダー右のバッジを「実データ(緑)」か「サンプル(橙)」に切り替える
   function setBadge(kind){
     var b=$("#dataBadge");if(!b)return;
     if(kind==="ok"){b.className="dbadge ok";b.textContent="実データ"}
     else{b.className="dbadge spl";b.textContent="サンプルデータ"}
   }
+  // CSVを読み込み、Shift_JISを文字列に変換して2次元配列にする（※現状は同梱データ利用のため未使用）
   async function loadCSV(url){
     var res=await fetch(url,{cache:"no-store"});
     if(!res.ok)throw new Error("HTTP "+res.status);
@@ -818,10 +924,10 @@
     var text=new TextDecoder("shift_jis").decode(buf);
     return text.split(/\r?\n/).filter(function(l){return l.trim().length}).map(function(l){return l.split(",")});
   }
-  function num(x){return parseInt(String(x).replace(/[^0-9-]/g,""),10)||0}
-  function fmt(n){return n.toLocaleString("ja-JP")}
-  function classifyWeather(w){return /雪/.test(w)?"雪":/雨/.test(w)?"雨":/晴/.test(w)?"晴":"曇"}
-
+  function num(x){return parseInt(String(x).replace(/[^0-9-]/g,""),10)||0} // 文字列から数字だけ取り出す
+  function fmt(n){return n.toLocaleString("ja-JP")} // 3桁区切り（例 1,234）
+  function classifyWeather(w){return /雪/.test(w)?"雪":/雨/.test(w)?"雨":/晴/.test(w)?"晴":"曇"} // 天気表記を4分類に正規化
+  // CSVの行から曜日別・天気別の平均や居住地割合を計算（loadCSVとセットの集計器。現状は未使用）
   function computeReal(daily,residence){
     var hi=-1;for(var i=0;i<daily.length;i++){if(daily[i].indexOf("来訪者数")>=0){hi=i;break}}
     var rows=[],sum=0;
@@ -841,14 +947,15 @@
     return{dow:dow,overallAvg:Math.round(sum/rows.length),weatherArr:weatherArr,residence:resArr,days:rows.length};
   }
 
-  var DOW_ORDER=["月","火","水","木","金","土","日"];
-  var DOW_JS={0:"日",1:"月",2:"火",3:"水",4:"木",5:"金",6:"土"};
-
+  var DOW_ORDER=["月","火","水","木","金","土","日"]; // グラフの曜日の並び順
+  var DOW_JS={0:"日",1:"月",2:"火",3:"水",4:"木",5:"金",6:"土"}; // JSのgetDay()(0=日)→漢字
+  // 混雑タブ本体：今日の見込み(◎○△)＋曜日別棒グラフ＋天気別横棒＋ねらい目コメントを組み立てる
   function renderKonzatsuReal(){
-    var today;try{today=DOW_JS[new Date().getDay()]}catch(e){today="土"}
-    var avg=REAL.overallAvg,ta=REAL.dow[today]||avg;
+    var today;try{today=DOW_JS[new Date().getDay()]}catch(e){today="土"} // 今日の曜日
+    var avg=REAL.overallAvg,ta=REAL.dow[today]||avg; // 全体平均と今日の平均
+    // 今日が平均より+12%超なら「混む(△)」、-12%未満なら「すいてる(◎)」、間なら「平均的(○)」
     var lvl=ta>avg*1.12?{c:"busy",m:"△",s:"混みやすい曜日です"}:ta<avg*0.88?{c:"calm",m:"◎",s:"すいている曜日です"}:{c:"mid",m:"○",s:"平均的な混み具合です"};
-    var rawMax=Math.max.apply(null,DOW_ORDER.map(function(d){return REAL.dow[d]||0}))||1;
+    var rawMax=Math.max.apply(null,DOW_ORDER.map(function(d){return REAL.dow[d]||0}))||1; // 曜日平均の最大値
     var mx=Math.ceil(rawMax/100)*100||1; // データ最大を100単位で切り上げた軸上限（固定値ではなく自動）
     var h='<div class="card hi" style="text-align:center"><div class="lbl" style="text-align:center">きょうは '+today+'曜日 の見込み</div>'+
       '<div class="sig '+lvl.c+'" style="border:none;background:none;padding:2px 0"><div class="mk" style="font-size:32px">'+lvl.m+'</div><div class="s" style="font-size:12px">'+lvl.s+'（平均 '+fmt(ta)+' 人／日）</div></div></div>';
@@ -865,6 +972,7 @@
     h+='<div class="basis">出典：【日別】西山公園東側来訪者数（人流データ）・鯖江市オープンデータ（CC BY）</div>';
     $("#konzatsuReal").innerHTML=h;
   }
+  // ガイドタブの「来訪者はどこから？」：居住地割合の上位5件を横棒グラフで表示
   function renderResidenceReal(){
     if(!REAL||!REAL.residence.length){$("#residenceReal").innerHTML="";return}
     var top=REAL.residence.slice(0,5),mx=top[0].pct||1;
@@ -872,6 +980,7 @@
       top.map(function(o){return '<div class="hbar"><div class="nm">'+o.city.replace("福井県","")+'</div><div class="track"><div class="fill" style="width:'+Math.round(o.pct/mx*100)+'%;background:var(--rust)"></div></div><div class="v">'+o.pct+'%</div></div>'}).join("")+
       '</div></div>';
   }
+  // ホームの「今日の混みぐあい」サインを、混雑タブと同じロジックで描く
   function applyHome(){
     var today;try{today=DOW_JS[new Date().getDay()]}catch(e){today="土"}
     var avg=REAL.overallAvg,ta=REAL.dow[today]||avg;
@@ -881,10 +990,11 @@
     var t=$("#homeTip");if(t)t.innerHTML='曜日別の来園者数（人流データ）より。晴れの日は混みやすい傾向です';
   }
 
+  // 実データを読み込んで各画面を描く。同梱のREAL_DATAを使うので通信不要（オフラインでも動く）
   function loadReal(){
     REAL=REAL_DATA;
-    setBadge("ok");
-    renderKonzatsuReal();renderResidenceReal();applyHome();
+    setBadge("ok"); // バッジを「実データ」に
+    renderKonzatsuReal();renderResidenceReal();applyHome(); // 混雑/居住地/ホームを描画
   }
 
   /* ---------- レッサー写真の投稿 ----------
@@ -893,16 +1003,16 @@
                 レスポンス例: {"id":"...","url":"https://.../xxx.jpg","handle":"...","createdAt":"..."}
        - 取得: GET   {PHOTO_API}/photos   → [{url,handle,time}, ...]
      PHOTO_API が空のときは「デモモード」= この端末内(localStorage)に一時保存して表示します。 */
-  var PHOTO_API="";                 // 例: "https://your-server.example.com/api"
-  var PHOTO_KEY="ressawalk_photos_v1";
-  var LIKE_KEY="ressawalk_likes_v1";
-  function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
-  function escAttr(s){return esc(s).split('"').join("&quot;")}
-  function localPhotos(){try{return JSON.parse(localStorage.getItem(PHOTO_KEY)||"[]")||[]}catch(e){return[]}}
-  function saveLocalPhotos(a){try{localStorage.setItem(PHOTO_KEY,JSON.stringify(a.slice(0,12)))}catch(e){}}
-  function likedMap(){try{return JSON.parse(localStorage.getItem(LIKE_KEY)||"{}")||{}}catch(e){return{}}}
-  function setLikedMap(m){try{localStorage.setItem(LIKE_KEY,JSON.stringify(m))}catch(e){}}
-  function photoId(p){return p.id||("x"+String(p.url||"").length+"_"+(p.handle||""))}
+  var PHOTO_API="";                 // ★ここにサーバーURLを入れると全端末で共有になる。空=端末内デモ
+  var PHOTO_KEY="ressawalk_photos_v1";  // 投稿写真の保存キー
+  var LIKE_KEY="ressawalk_likes_v1";    // いいねの保存キー（{写真id:1}）
+  function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")} // HTMLエスケープ（表示崩れ・XSS防止）
+  function escAttr(s){return esc(s).split('"').join("&quot;")} // 属性値用に " も変換
+  function localPhotos(){try{return JSON.parse(localStorage.getItem(PHOTO_KEY)||"[]")||[]}catch(e){return[]}} // 端末内の投稿を読む
+  function saveLocalPhotos(a){try{localStorage.setItem(PHOTO_KEY,JSON.stringify(a.slice(0,12)))}catch(e){}} // 端末内に保存（最大12件）
+  function likedMap(){try{return JSON.parse(localStorage.getItem(LIKE_KEY)||"{}")||{}}catch(e){return{}}} // いいね状態を読む
+  function setLikedMap(m){try{localStorage.setItem(LIKE_KEY,JSON.stringify(m))}catch(e){}} // いいね状態を保存
+  function photoId(p){return p.id||("x"+String(p.url||"").length+"_"+(p.handle||""))} // 写真の一意キー
   // 仮のサンプル写真（reference/ressa/ に配置）。likes は仮のいいね数。本番サーバー用意後は不要。
   var SAMPLE_PHOTOS=[
     {url:"./reference/ressa/lite.png",handle:"パンダ好き太郎",sample:true,id:"s1",likes:31},
@@ -918,29 +1028,33 @@
     {url:"./reference/ressa/tiara.png",handle:"鯖江さんぽ",sample:true,id:"s11",likes:3},
     {url:"./reference/ressa/taiyo.png",handle:"めがねっこ",sample:true,id:"s12",likes:2}
   ];
-  // 今月（1日〜末日）の範囲・日付ユーティリティ
+  /* 今月（1日〜末日）の範囲・日付ユーティリティ（写真と川柳のランキング両方で共用）
+     fmtDate=日付を"YYYY/M/D"文字列に、monthRange=今月の初日/末日、monthLabel=「（2026年11月）」、
+     parseDate=文字列→Date、inThisMonth=その日付が今月内かを判定 */
   function fmtDate(d){return d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()}
   function monthRange(){var n=new Date();var start=new Date(n.getFullYear(),n.getMonth(),1);var end=new Date(n.getFullYear(),n.getMonth()+1,0);return {start:start,end:end}}
   function monthLabel(){var m=monthRange();return "（"+m.start.getFullYear()+"年"+(m.start.getMonth()+1)+"月）"}
   function parseDate(s){var m=/(\d{4})\/(\d{1,2})\/(\d{1,2})/.exec(s||"");return m?new Date(+m[1],+m[2]-1,+m[3]):null}
   function inThisMonth(s){var d=parseDate(s);if(!d)return false;var m=monthRange();return d>=m.start&&d<=m.end}
-  // サンプル写真に今月の日付を割り当て（デモ用・常に今月に収まる）
+  // サンプル写真に今月の日付を割り当て（デモ用・常に今月に収まるよう、今日から1日ずつさかのぼる）
   (function(){var m=monthRange();var t=new Date();t=new Date(t.getFullYear(),t.getMonth(),t.getDate());
     SAMPLE_PHOTOS.forEach(function(p,i){var d=new Date(t.getFullYear(),t.getMonth(),t.getDate()-i);if(d<m.start)d=m.start;p.time=fmtDate(d)})})();
 
+  // 写真一覧を取得：サーバー設定があればそこから、無ければ端末内の投稿＋サンプルを返す
   async function fetchPhotos(){
     if(PHOTO_API){try{var r=await fetch(PHOTO_API+"/photos");if(r.ok)return await r.json()}catch(e){}return[]}
     return localPhotos().concat(SAMPLE_PHOTOS);
   }
+  // 写真ランキングを描画：今月分を「いいね数」で並べ、上位7(=レッサー七福神)を金銀銅付きで、8位以下を「その他」に
   function renderPhotos(list){
     var g=$("#photoGrid");if(!g)return;
     var wl=$("#rankWeek");
     if(wl)wl.textContent=monthLabel();
     var lm=likedMap();
-    var week=(list||[]).filter(function(p){return inThisMonth(p.time)});
-    week.forEach(function(p){p._l=(p.likes||0)+(lm[photoId(p)]?1:0)});
-    week.sort(function(a,b){return b._l-a._l});
-    var top=week.slice(0,7), others=week.slice(7);
+    var week=(list||[]).filter(function(p){return inThisMonth(p.time)}); // 今月分だけに絞る
+    week.forEach(function(p){p._l=(p.likes||0)+(lm[photoId(p)]?1:0)}); // _l=合計いいね（元の数＋自分の1）
+    week.sort(function(a,b){return b._l-a._l}); // いいね数の多い順に並べ替え
+    var top=week.slice(0,7), others=week.slice(7); // 上位7＝七福神／残りはその他
     if(!top.length){g.innerHTML='<div class="photoempty">今月の投稿はまだありません。写真を投稿しよう！</div>';}
     else g.innerHTML=top.map(function(p,i){
       var id=photoId(p),liked=!!lm[id],medal=i===0?" g":i===1?" s":i===2?" b":"";
@@ -967,7 +1081,8 @@
     }).join("");
     if(ob)ob.style.display=others.length?"block":"none";
   }
-  async function loadPhotos(){renderPhotos(await fetchPhotos())}
+  async function loadPhotos(){renderPhotos(await fetchPhotos())} // 取得→描画をまとめて実行
+  // 投稿前に画像を縮小（長辺をmax pxに）してJPEG化。重い写真でも軽くしてから保存/送信するため
   function resizeImage(file,max,cb){
     var img=new Image(),url=URL.createObjectURL(file);
     img.onload=function(){
@@ -979,10 +1094,11 @@
     img.onerror=function(){URL.revokeObjectURL(url);cb(null,null)};
     img.src=url;
   }
+  // 写真投稿まわりの初期化（ファイル選択・投稿ボタン・いいね・拡大表示・「その他」開閉）
   (function initPhoto(){
     var fileInput=$("#upFile"),handleInput=$("#upHandle"),btn=$("#upBtn"),hint=$("#upHint"),flabel=$("#upFileLabel"),fwrap=$("#upFileWrap");
     if(!btn)return;
-    var picked=null;
+    var picked=null; // 選択中のファイル
     fileInput.addEventListener("change",function(){
       picked=(fileInput.files&&fileInput.files[0])||null;
       if(picked){flabel.textContent=picked.name.length>18?picked.name.slice(0,16)+"…":picked.name;fwrap.classList.add("has")}
@@ -1001,16 +1117,19 @@
           hint.textContent=msg;btn.disabled=false;toast("写真を投稿しました 🐾");loadPhotos();
         }
         if(PHOTO_API){
+          // 【本番】サーバーがある場合：画像を multipart で POST 送信
           var fd=new FormData();fd.append("handle",handle);fd.append("photo",blob,"ressa.jpg");
           fetch(PHOTO_API+"/photos",{method:"POST",body:fd}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})
             .then(function(){done("投稿しました！")})
             .catch(function(e){hint.textContent="投稿に失敗しました（"+e.message+"）";btn.disabled=false});
         }else{
+          // 【デモ】サーバーが無い場合：画像をデータURLにして端末内(localStorage)に保存。他端末には出ない
           var arr=localPhotos();arr.unshift({url:dataURL,handle:handle,time:ts,id:"u"+Date.now(),likes:0});saveLocalPhotos(arr);
           done("投稿しました（この端末に保存・デモ表示）");
         }
       });
     });
+    // 一覧内のクリックを仕分け：写真なら拡大(lightbox)、いいねボタンならON/OFFして再描画
     function photoClick(e){
       var img=e.target.closest&&e.target.closest(".zoomimg");
       if(img){
@@ -1035,7 +1154,9 @@
     loadPhotos();
   })();
 
-  /* ---------- 自動デモ用の受信口（demo.html から postMessage で操作） ---------- */
+  /* ========== 自動デモ用の受信口 ==========
+     紹介動画のdemo.htmlが、このアプリをiframeで埋め込み postMessage で遠隔操作するための窓口。
+     tab=タブ切替, scroll=スクロール, click/clickAt=要素クリック。通常利用には影響しない。 */
   window.addEventListener("message",function(e){
     var m=e.data||{};
     try{
@@ -1048,9 +1169,10 @@
 
   /* ---------- 意見箱（西山公園への意見投稿） ----------
      設置意図：来園者の声を集め、公園・アプリの改善に活かす。現状はデモ（端末内に保存）、本番は鯖江市へ届く仕組みを想定。 */
-  var OP_KEY="ressawalk_opinions_v1";
-  function loadOps(){try{return JSON.parse(localStorage.getItem(OP_KEY)||"[]")||[]}catch(e){return[]}}
-  function saveOps(a){try{localStorage.setItem(OP_KEY,JSON.stringify(a.slice(0,30)))}catch(e){}}
+  var OP_KEY="ressawalk_opinions_v1"; // 意見の保存キー
+  function loadOps(){try{return JSON.parse(localStorage.getItem(OP_KEY)||"[]")||[]}catch(e){return[]}} // 読み込み
+  function saveOps(a){try{localStorage.setItem(OP_KEY,JSON.stringify(a.slice(0,30)))}catch(e){}} // 最大30件保存
+  // 寄せられた意見を一覧表示（この端末に保存された分）
   function renderOps(){
     var el=$("#opList");if(!el)return;
     var a=loadOps();
@@ -1059,6 +1181,7 @@
       return '<div class="opcard"><div class="opt">'+esc(o.text)+'</div><div class="opm">'+esc(o.name||"名無し")+' ・ '+esc(o.time||"")+'</div></div>';
     }).join("");
   }
+  // 意見箱の初期化：送信ボタンで入力を保存し、一覧を更新（現状は端末内保存のデモ）
   (function initOp(){
     var btn=$("#opBtn");if(!btn)return;
     btn.addEventListener("click",function(){
@@ -1077,13 +1200,13 @@
   /* ---------- 西山川柳（投稿＋月間ランキング） ----------
      設置意図：花・レッサー・紅葉をお題に、全世代が気軽に参加できる五七五で、西山公園への愛着と口コミを育てる。
      写真ランキング同様、今月の「いいね」上位を発表。現状はデモ（端末内に保存）、本番は鯖江市のサーバーで共有を想定。 */
-  var SEN_KEY="ressawalk_senryu_v1";
-  var SENLIKE_KEY="ressawalk_senryulikes_v1";
-  function localSen(){try{return JSON.parse(localStorage.getItem(SEN_KEY)||"[]")||[]}catch(e){return[]}}
-  function saveLocalSen(a){try{localStorage.setItem(SEN_KEY,JSON.stringify(a.slice(0,30)))}catch(e){}}
-  function senLikedMap(){try{return JSON.parse(localStorage.getItem(SENLIKE_KEY)||"{}")||{}}catch(e){return{}}}
-  function setSenLikedMap(m){try{localStorage.setItem(SENLIKE_KEY,JSON.stringify(m))}catch(e){}}
-  function senId(p){return p.id||("k"+String(p.text||"").length+"_"+(p.handle||""))}
+  var SEN_KEY="ressawalk_senryu_v1";          // 投稿川柳の保存キー
+  var SENLIKE_KEY="ressawalk_senryulikes_v1"; // 川柳いいねの保存キー
+  function localSen(){try{return JSON.parse(localStorage.getItem(SEN_KEY)||"[]")||[]}catch(e){return[]}} // 端末内の投稿句
+  function saveLocalSen(a){try{localStorage.setItem(SEN_KEY,JSON.stringify(a.slice(0,30)))}catch(e){}} // 最大30句保存
+  function senLikedMap(){try{return JSON.parse(localStorage.getItem(SENLIKE_KEY)||"{}")||{}}catch(e){return{}}} // いいね状態
+  function setSenLikedMap(m){try{localStorage.setItem(SENLIKE_KEY,JSON.stringify(m))}catch(e){}} // いいね保存
+  function senId(p){return p.id||("k"+String(p.text||"").length+"_"+(p.handle||""))} // 句の一意キー
   // 仮のサンプル川柳。likes は仮のいいね数。本番サーバー用意後は不要。
   var SAMPLE_SENRYU=[
     {text:"レッサーに 会いに西山 春うらら",handle:"さばえ太郎",sample:true,id:"k1",likes:34},
@@ -1100,22 +1223,25 @@
   ];
   (function(){var m=monthRange();var t=new Date();t=new Date(t.getFullYear(),t.getMonth(),t.getDate());
     SAMPLE_SENRYU.forEach(function(p,i){var d=new Date(t.getFullYear(),t.getMonth(),t.getDate()-i);if(d<m.start)d=m.start;p.time=fmtDate(d)})})();
-  function allSen(){return localSen().concat(SAMPLE_SENRYU)}
+  function allSen(){return localSen().concat(SAMPLE_SENRYU)} // 端末内の投稿＋サンプルを合わせて返す
+  // いいねボタンのHTMLを作る（id=対象, liked=押下済みか, n=表示するいいね数）
   function senLikeBtn(id,liked,n){
     return '<button type="button" class="likebtn'+(liked?" on":"")+'" data-id="'+esc(id)+'" aria-label="いいね">'+
       '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.6 2 6.5 5 6.5c1.9 0 3 1.2 3.5 2 .5-.8 1.6-2 3.5-2 3 0 4.2 3.1 2.5 6C19 16.5 12 21 12 21z"/></svg>'+
       '<span class="lc">'+n+'</span></button>';
   }
+  // 川柳1件分のカードHTMLを作る（rankHtml=順位バッジ。ランキング上位のときだけ渡す）
   function senCard(p,rankHtml,lm){
     var id=senId(p),liked=!!lm[id];
     return '<div class="senrow">'+(rankHtml||"")+
       '<div class="senku"><div class="sk">'+esc(p.text)+'</div><div class="sa">'+esc(p.handle||"名無し")+'　'+esc(p.time||"")+'</div></div>'+
       senLikeBtn(id,liked,p._l)+'</div>';
   }
+  // 川柳ランキングを描画（写真と同じ考え方：今月分をいいね順に上位7＝川柳七福神＋その他）
   function renderSenryu(){
     var g=$("#senGrid");if(!g)return;
     var wl=$("#senWeek");
-    if(wl)wl.textContent=monthLabel();
+    if(wl)wl.textContent=monthLabel(); // 「（2026年11月）」の表示
     var lm=senLikedMap();
     var week=allSen().filter(function(p){return inThisMonth(p.time)});
     week.forEach(function(p){p._l=(p.likes||0)+(lm[senId(p)]?1:0)});
@@ -1130,6 +1256,7 @@
     if(op)op.innerHTML=others.map(function(p){return senCard(p,"",lm)}).join("");
     if(ob)ob.style.display=others.length?"block":"none";
   }
+  // 川柳の初期化：投稿ボタン・いいね・「その他」開閉を設定
   (function initSenryu(){
     var btn=$("#senBtn");if(!btn)return;
     btn.addEventListener("click",function(){
@@ -1157,7 +1284,11 @@
     renderSenryu();
   })();
 
-  /* ---------- init ---------- */
+  /* ========== 起動処理（アプリの初期表示） ==========
+     ここまでは定義のみ。最後にこの3つを呼んで画面を組み立てる。
+       renderSeason("spring") … 花ごよみを春で初期描画（地図はタブを開いた時に生成）
+       renderDex()            … 推しレッサーの図鑑を描画
+       loadReal()             … 混雑/居住地/ホームの実データを描画 */
   renderSeason("spring");
   renderDex();
   loadReal();
