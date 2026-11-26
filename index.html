@@ -98,7 +98,12 @@
   .bloom .meta{font-size:12px;color:var(--ink-soft);margin-top:2px}
   .badge{display:inline-block;font-size:10px;font-weight:700;color:#fff;border-radius:5px;padding:1px 6px;margin-left:5px;vertical-align:middle}
 
-  .tiles{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .spotrow{display:flex;align-items:center;gap:12px;padding:8px 0}
+  .spotrow+.spotrow{border-top:1px solid var(--line)}
+  .spoticon{width:46px;height:46px;border-radius:12px;flex:0 0 auto;object-fit:cover;background:var(--line);box-shadow:inset 0 0 0 3px rgba(255,255,255,.3)}
+  .spotrow .nm{font-weight:700;font-size:16px}
+  .spotrow .meta{font-size:13px;color:var(--ink-soft);margin-top:3px}
   .tile{background:var(--surface-2);border:1px solid var(--line);border-radius:15px;padding:14px 6px;text-align:center;cursor:pointer;transition:transform .12s,border-color .12s}
   .tile:active{transform:scale(.94)}
   .tile:hover{border-color:var(--rust)}
@@ -151,14 +156,19 @@
   .bloomtip{background:rgba(255,255,255,.92);color:#2A211B;border:none;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.3);font-size:10.5px;font-weight:700;padding:2px 7px}
   .bloomtip::before{border-top-color:rgba(255,255,255,.92)}
   .leaflet-div-icon{background:transparent;border:none}
-  .bpin{border-radius:50%;box-shadow:0 0 0 3px rgba(255,255,255,.65),0 1px 5px rgba(0,0,0,.35);opacity:.92;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
-  .bpin:hover,.bpin.sel{transform:scale(1.15);opacity:1}
+  .bpin{border-radius:50%;box-shadow:0 0 0 3px rgba(255,255,255,.65),0 1px 5px rgba(0,0,0,.35);opacity:.92;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s,background .15s,box-shadow .15s}
+  .bpin:hover{transform:scale(1.12);opacity:1}
+  .bpin.sel{background:var(--sky)!important;opacity:1;transform:scale(1.28);
+    box-shadow:0 0 0 4px #fff,0 3px 10px rgba(0,0,0,.5)!important;z-index:1000}
   .bpin b{font-family:var(--latin);font-size:9px;color:#fff;font-weight:700}
   .mapfallback{display:flex;align-items:center;justify-content:center;height:100%;font-size:12px;color:var(--ink-soft);text-align:center;padding:16px}
   .mapedit{margin:0 8px 10px 0;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-soft);font-family:var(--body);font-weight:700;font-size:12px;padding:7px 13px;border-radius:999px;cursor:pointer}
   .mapedit.on{background:var(--rust);color:#fff;border-color:var(--rust)}
   .ficon{font-family:var(--latin);font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}
   .ficon.toilet{width:22px;height:22px;border-radius:50%;background:var(--sky);font-size:9px}
+  .ficon.toilet.baby{background:var(--azalea)}
+  .babytip{background:var(--azalea);color:#fff;border:none;border-radius:6px;font-size:10px;font-weight:700;padding:2px 7px;box-shadow:0 1px 4px rgba(0,0,0,.35);white-space:nowrap}
+  .babytip::before{border-bottom-color:var(--azalea)!important}
   .ficon.aed{width:28px;height:18px;border-radius:5px;background:var(--busy);font-size:9px}
   /* access (さんぽタブ) */
   .acc{display:flex;flex-direction:column;gap:11px;margin-bottom:10px}
@@ -230,6 +240,25 @@
   .upbtn:disabled{opacity:.5;cursor:default}
   .uphint{font-size:11.5px;color:var(--muted);text-align:center;min-height:14px}
   .photogrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  /* 今月の写真ランキング */
+  .rankrow{display:flex;align-items:center;gap:11px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:8px 11px;margin-bottom:9px}
+  .rankno{width:28px;height:28px;flex:0 0 auto;border-radius:50%;background:var(--ink-soft);color:#fff;font-family:var(--latin);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
+  .rankno.g{background:#D9A400}.rankno.s{background:#9AA3AD}.rankno.b{background:#B5793A}
+  .rankimg{width:52px;height:52px;object-fit:cover;border-radius:9px;flex:0 0 auto;background:var(--line);cursor:zoom-in}
+  .lightbox{position:absolute;inset:0;background:rgba(10,6,3,.9);display:none;align-items:center;justify-content:center;z-index:40;padding:24px;cursor:zoom-out}
+  .lightbox.show{display:flex}
+  .lbinner{max-width:100%;max-height:100%;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .lightbox img{max-width:100%;max-height:82vh;border-radius:14px;box-shadow:0 12px 44px rgba(0,0,0,.6);background:var(--line)}
+  .lbcap{color:#fff;font-size:13px;font-weight:700;text-align:center}
+  .zoomimg{cursor:zoom-in}
+  .optext{resize:vertical;min-height:72px;line-height:1.6;font-family:var(--body)}
+  .opcard{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:9px}
+  .opcard .opt{font-size:13.5px;color:var(--ink);line-height:1.7;white-space:pre-wrap;word-break:break-word}
+  .opcard .opm{font-size:10.5px;color:var(--muted);margin-top:6px;font-family:var(--latin)}
+  .rankmeta{flex:1 1 auto;min-width:0}
+  .rankmeta .rh{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rankmeta .rt{font-size:10.5px;color:var(--muted);font-family:var(--latin);margin-top:2px}
+  .rankrow .likebtn{flex:0 0 auto}
   .photocard{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative}
   .photocard img{width:100%;height:120px;object-fit:cover;display:block;background:var(--line)}
   .pbadge{position:absolute;top:6px;left:6px;background:var(--maple);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px}
@@ -244,6 +273,14 @@
   .likebtn.on svg{fill:var(--azalea)}
   .likebtn:active{transform:scale(.94)}
   .photoempty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:12px;padding:18px;border:1px dashed var(--line);border-radius:12px}
+
+  /* 西山川柳ランキング */
+  .senrow{display:flex;align-items:center;gap:11px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:9px}
+  .senku{flex:1 1 auto;min-width:0}
+  .senku .sk{font-family:var(--display);font-weight:700;font-size:16px;color:var(--ink);line-height:1.55;word-break:break-word}
+  .senku .sa{font-size:10.5px;color:var(--muted);margin-top:4px;font-family:var(--latin)}
+  .senrow .likebtn{flex:0 0 auto}
+  .senotherbtn{width:100%;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-soft);font-family:var(--body);font-weight:700;font-size:13px;padding:10px;border-radius:11px;cursor:pointer;margin:2px 0 14px}
 
   .stampbar{margin-top:14px;background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:12px 14px}
   .stampbar .sh{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;margin-bottom:8px}
@@ -267,7 +304,7 @@
 
   /* tabbar */
   .tabbar{flex:0 0 auto;display:flex;justify-content:space-around;align-items:center;padding:8px 4px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--surface);z-index:5}
-  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:9.5px;font-weight:700;background:none;border:none;cursor:pointer;padding:4px 8px;font-family:var(--body)}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:9.5px;font-weight:700;background:none;border:none;cursor:pointer;padding:4px 4px;font-family:var(--body);white-space:nowrap}
   .tab svg{width:22px;height:22px}
   .tab.on{color:var(--rust)}
 
@@ -318,18 +355,47 @@
         <div class="sigtip" id="homeTip">曜日別の来園者数（人流データ）から予測します</div>
       </div>
       <div class="card hi">
-        <div class="lbl">西山公園のツツジ</div>
-        <div class="bloom">
-          <div class="swatch" style="background:radial-gradient(circle at 35% 30%,#E88BB0,var(--azalea))"></div>
-          <div><div class="nm">ヒラドツツジ</div><div class="meta">公園全体 ・ 約31,400株（鯖江市オープンデータ）</div></div>
+        <div style="font-family:var(--display);font-weight:700;font-size:18px;color:var(--ink);margin-bottom:6px">✨ 西山公園の見どころ</div>
+        <div class="spotrow">
+          <img class="spoticon" src="./reference/ressa/kanta.png" alt="レッサーパンダ" loading="lazy">
+          <div><div class="nm">レッサーパンダ</div><div class="meta">無料で会える西山動物園（全8頭）</div></div>
+        </div>
+        <div class="spotrow">
+          <img class="spoticon" src="./reference/tsutsuji_icon.png" alt="ツツジ" loading="lazy">
+          <div><div class="nm">ツツジ</div><div class="meta">日本海側随一・約5万本（全11種）</div></div>
         </div>
       </div>
       <div class="tiles" id="tiles"></div>
+
+      <div style="margin:26px 2px 10px;font-family:var(--display);font-weight:700;font-size:22px;color:var(--ink)">🖋 西山川柳</div>
+      <div class="uphint" style="text-align:left;margin:0 2px 12px;font-size:12.5px">西山公園・レッサーパンダ・ツツジや紅葉をお題に、五・七・五で一句どうぞ🖋 毎月いちばん「いいね」を集めた7句が、その月の <b>川柳七福神</b> です。目指せ七福神入り！</div>
+      <div style="margin:4px 2px 12px;font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink);line-height:1.4">🏆 今月の西山川柳ランキング<br><span style="color:var(--rust);font-size:16px">（川柳七福神）</span><br><span id="senWeek" style="font-family:var(--body);font-size:13px;color:var(--muted);font-weight:700"></span></div>
+      <div id="senGrid"></div>
+      <button type="button" id="senOtherBtn" class="senotherbtn" style="display:none">その他の川柳をみる</button>
+      <div id="senOther" style="display:none"></div>
+      <div class="uploadbox">
+        <input type="text" id="senName" class="upinput" maxlength="20" placeholder="ニックネーム（任意）">
+        <input type="text" id="senText" class="upinput" maxlength="40" placeholder="五・七・五で一句（例：レッサーに 会いに西山 春うらら）">
+        <button type="button" id="senBtn" class="upbtn">川柳を投稿</button>
+        <div class="uphint" id="senHint"></div>
+      </div>
+      <div class="uphint" style="text-align:left;margin:8px 2px 0">※これは仮の機能です。投稿内容といいねはこの端末内に保存され、実際には送信されません。本番では鯖江市のサーバーで共有する仕組みを想定しています。</div>
+
+      <div style="margin:26px 2px 10px;font-family:var(--display);font-weight:700;font-size:22px;color:var(--ink)">📮 西山公園 意見箱</div>
+      <div class="uphint" style="text-align:left;margin:0 2px 10px">西山公園をもっと楽しく・便利にするために、みなさんの声を集めています。「こんな施設がほしい」「ここが不便」「こんなイベントがあったら」など、気づいたことを気軽にお寄せください。いただいた意見は、公園やこのアプリの改善の参考にします。</div>
+      <div class="uploadbox">
+        <input type="text" id="opName" class="upinput" maxlength="20" placeholder="ニックネーム（任意）">
+        <textarea id="opText" class="upinput optext" rows="3" maxlength="300" placeholder="西山公園へのご意見・ご要望（例：ベンチや日かげを増やしてほしい）"></textarea>
+        <button type="button" id="opBtn" class="upbtn">意見を送る</button>
+        <div class="uphint" id="opHint"></div>
+      </div>
+      <div id="opList"></div>
+      <div class="uphint" style="text-align:left;margin:8px 2px 0">※これは仮の機能です。送信内容はこの端末内に保存され、実際には送信されません。本番では鯖江市へ届く仕組みを想定しています。</div>
     </section>
 
     <!-- HANAGOYOMI -->
     <section class="view" id="v-hana">
-      <div class="sc-title">花ごよみ</div>
+      <div class="sc-title">🌸 花ごよみ</div>
       <div class="seg" id="seasonSeg">
         <button data-s="spring" class="on">春 ツツジ</button>
         <button data-s="autumn">秋 紅葉</button>
@@ -339,14 +405,14 @@
       <button type="button" id="editPins" class="mapedit">ピン位置を調整</button>
       <div id="flowerMap"></div>
       <div class="maplegend" id="mapLegend"></div>
-      <div class="uphint" id="facilNote" style="text-align:left;margin:0 2px 8px;display:none">トイレ8か所・AEDは鯖江市オープンデータ（公共トイレ／AED）より。位置は案内図に合わせた目安です。</div>
+      <div class="uphint" id="facilNote" style="text-align:left;margin:0 2px 8px;display:none">トイレ8か所は鯖江市オープンデータ「公共トイレ」。AEDは園内の公開データが無いため、緯度経度から算出した<b>園周辺の最寄り（直線距離の目安）</b>を表示（出典：鯖江市オープンデータ「AED」）。位置は案内図に合わせた目安です。<b style="color:var(--azalea)">ピンク</b>のWC＝ベビーベッドあり（おむつ替え可）。</div>
       <div class="blist" id="bloomList"></div>
       <a class="reflink" href="https://www.city.sabae.fukui.jp/kanko/playing/nishiyama.html" target="_blank" rel="noopener">西山公園の詳しい情報（鯖江市公式サイト）→</a>
     </section>
 
     <!-- KONZATSU -->
     <section class="view" id="v-konzatsu">
-      <div class="sc-title">混雑予報</div>
+      <div class="sc-title">📊 混雑&amp;アクセス</div>
       <div id="konzatsuReal"></div>
       <div class="card hi" style="margin-top:14px">
         <div class="lbl">西山公園へのアクセス</div>
@@ -362,32 +428,38 @@
 
     <!-- DEX -->
     <section class="view" id="v-dex">
-      <div class="sc-title">レッサー図鑑</div>
+      <div class="sc-title">🐾 推しレッサー</div>
       <div class="pick">
         <img class="av" id="pickAv" alt="きょうの推しレッサー">
         <div><div class="pl">きょうの推しレッサー</div><div class="pn" id="pickName"></div><div class="pm" id="pickNote"></div></div>
       </div>
       <div class="dex" id="dex"></div>
       <div class="stampbar">
-        <div class="sh"><span>会えたレッサー</span><span id="metCount">0 / 9</span></div>
+        <div class="sh"><span>会えたレッサー</span><span id="metCount">0 / 8</span></div>
         <div class="track"><i id="metTrack" style="width:0%"></i></div>
       </div>
       <div class="datasrc"><b>出典</b>：個体名・生年月日・性別・プロフィールは鯖江市オープンデータ「西山動物園のレッサーパンダ一覧」、写真は鯖江市オープンデータ「レッサーパンダ画像」より（CC BY）。</div>
 
-      <div class="lbl" style="margin:20px 2px 6px">みんなのレッサー写真</div>
-      <div class="uphint" style="text-align:left;margin:0 2px 10px">※これは<b>仮の投稿機能</b>です。表示中の写真は<b>動作確認用のサンプル</b>で、実際の投稿ではありません。<b>いいね数も仮の表示</b>（この端末内に保存）です。本番では投稿写真・いいねを別サーバーに保存する想定です。</div>
+      <div style="margin:24px 2px 10px;font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink)">📸 みんなのレッサー写真</div>
+      <div class="uphint" style="text-align:left;margin:0 2px 12px;font-size:12.5px">みんなが撮った西山公園のレッサーパンダ写真を「いいね」で応援📸 毎月いちばん人気の7枚が、その月の <b>レッサー七福神</b> です。目指せ七福神入り！</div>
+      <div style="margin:4px 2px 12px;font-family:var(--display);font-weight:700;font-size:19px;color:var(--ink);line-height:1.4">🏆 今月のレッサー写真ランキング<br><span style="color:var(--rust);font-size:16px">（レッサー七福神）</span><br><span id="rankWeek" style="font-family:var(--body);font-size:13px;color:var(--muted);font-weight:700"></span></div>
+      <div id="photoGrid"></div>
+      <button type="button" id="otherBtn" class="mapedit" style="display:none;margin:6px 2px 12px">その他の写真をみる</button>
+      <div id="otherPhotos" class="photogrid" style="display:none"></div>
+
+      <div class="lbl" style="margin:22px 2px 10px">📷 写真を投稿</div>
       <div class="uploadbox">
         <input type="text" id="upHandle" class="upinput" maxlength="20" placeholder="ハンドルネーム（例：さばえ太郎）">
         <label class="upfile" id="upFileWrap"><input type="file" id="upFile" accept="image/*" hidden><span id="upFileLabel">写真を選ぶ</span></label>
         <button type="button" id="upBtn" class="upbtn">投稿する</button>
         <div class="uphint" id="upHint"></div>
       </div>
-      <div class="photogrid" id="photoGrid"></div>
+      <div class="uphint" style="text-align:left;margin:8px 2px 0">※これは<b>仮の投稿機能</b>です。表示中の写真は<b>動作確認用のサンプル</b>で、実際の投稿ではありません。<b>いいね数も仮の表示</b>（この端末内に保存）です。本番では投稿写真・いいねを別サーバーに保存する想定です。</div>
     </section>
 
     <!-- KAIYU -->
     <section class="view" id="v-kaiyu">
-      <div class="sc-title">おでかけガイド</div>
+      <div class="sc-title">🗺 おでかけガイド</div>
 
       <div class="card hi">
         <div class="lbl">基本情報</div>
@@ -445,6 +517,7 @@
   <div class="tabbar" id="tabbar"></div>
   <div id="toast"></div>
   <div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+  <div class="lightbox" id="lightbox"><div class="lbinner"><img id="lightImg" alt="レッサーパンダの写真"><div class="lbcap" id="lightCap"></div></div></div>
 </div>
 
 <script src="./lib/leaflet.js"></script>
@@ -487,7 +560,6 @@
 
   // 出典：鯖江市オープンデータ「西山動物園のレッサーパンダ一覧」＋個体画像（レッサーパンダ画像）
   var PANDAS=[
-    {n:"ミンファ",b:"2006.6.23",sex:"メス",note:"ティアラの母。市川市動植物園うまれ。",img:"./reference/ressa/minfa.jpg"},
     {n:"たいよう",b:"2013.6.15",sex:"オス",note:"池田動物園から婿入り。",img:"./reference/ressa/taiyo.png"},
     {n:"ライト",b:"2013.7.18",sex:"オス",note:"キラリの息子、かえでの父。西山うまれ。",img:"./reference/ressa/lite.png"},
     {n:"まつば",b:"2014.7.17",sex:"メス",note:"ニーコとレイファの母。日本平動物園うまれ。",img:"./reference/ressa/matsuba.jpg"},
@@ -501,18 +573,16 @@
   var TABS=[
     {id:"home",label:"ホーム",icon:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'},
     {id:"hana",label:"花ごよみ",icon:'<circle cx="12" cy="12" r="2.4"/><circle cx="12" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="12" r="2.4"/>'},
-    {id:"dex",label:"図鑑",icon:'<circle cx="12" cy="13" r="6.5"/><circle cx="6" cy="6.5" r="2.6"/><circle cx="18" cy="6.5" r="2.6"/>'},
-    {id:"konzatsu",label:"混雑",icon:'<rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="17" y="9" width="4" height="11" rx="1"/>'},
+    {id:"dex",label:"推しレッサー",icon:'<circle cx="12" cy="13" r="6.5"/><circle cx="6" cy="6.5" r="2.6"/><circle cx="18" cy="6.5" r="2.6"/>'},
+    {id:"konzatsu",label:"混雑&アクセス",icon:'<rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="17" y="9" width="4" height="11" rx="1"/>'},
     {id:"kaiyu",label:"ガイド",icon:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8.01"/>'}
   ];
 
   var TILES=[
     {go:"hana",label:"花ごよみ",bg:"bg-az",icon:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="5" r="3.2"/><circle cx="12" cy="19" r="3.2"/><circle cx="5" cy="12" r="3.2"/><circle cx="19" cy="12" r="3.2"/>',fill:true},
-    {go:"konzatsu",label:"混雑予報",bg:"bg-sky",icon:'<rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="17" y="9" width="4" height="11" rx="1"/>',fill:true},
-    {go:"dex",label:"レッサー図鑑",bg:"bg-rust",icon:'<circle cx="12" cy="13" r="7"/><circle cx="5.5" cy="6.5" r="3"/><circle cx="18.5" cy="6.5" r="3"/>',fill:true},
-    {go:"kaiyu",label:"ガイド",bg:"bg-garden",icon:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8.01"/>',fill:false},
-    {go:"dex",label:"写真",bg:"bg-maple",icon:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7l1.5-2h5L16 7"/><circle cx="12" cy="13.5" r="3.2"/>',fill:false},
-    {go:"dex",label:"スタンプ",bg:"bg-ink",icon:'<path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.8 5.9 21.4l1.4-6.8L2.2 9.9l6.9-.8z"/>',fill:true}
+    {go:"konzatsu",label:"混雑&アクセス",bg:"bg-sky",icon:'<rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="6" width="4" height="14" rx="1"/><rect x="17" y="9" width="4" height="11" rx="1"/>',fill:true},
+    {go:"dex",label:"推しレッサー",bg:"bg-rust",icon:'<circle cx="12" cy="13" r="7"/><circle cx="5.5" cy="6.5" r="3"/><circle cx="18.5" cy="6.5" r="3"/>',fill:true},
+    {go:"kaiyu",label:"ガイド",bg:"bg-garden",icon:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12" y2="8.01"/>',fill:false}
   ];
 
   var pandaSVG=function(alt){var col=alt?"#C0562C":"#B24A25";return '<svg class="av" viewBox="0 0 100 100"><circle cx="50" cy="54" r="30" fill="'+col+'"/><circle cx="50" cy="56" r="21" fill="#F4E4D0"/><path d="M22 34 Q18 14 34 22 Q40 28 34 38 Z" fill="'+col+'"/><path d="M78 34 Q82 14 66 22 Q60 28 66 38 Z" fill="'+col+'"/><circle cx="40" cy="52" r="4.6" fill="#2A211B"/><circle cx="60" cy="52" r="4.6" fill="#2A211B"/><path d="M50 60 l-5 4 h10 Z" fill="#2A211B"/></svg>'};
@@ -554,21 +624,28 @@
 
   /* ---------- render: 花ごよみ ---------- */
   var curSeason="spring";
-  var flowerMap=null,markerLayer=null,markers=[],illustCfg=null,editMode=false,facilityLayer=null,showFacil=false;
+  var flowerMap=null,markerLayer=null,markers=[],illustCfg=null,facilityLayer=null,showFacil=false,editMode=false;
+  // ピン位置の手修正を保存（localStorage）。トイレ/AEDは春秋で共通キーのため両方に反映される。
+  var PINPOS={};try{PINPOS=JSON.parse(localStorage.getItem("ressawalk_pinpos")||"{}")||{}}catch(e){}
+  function savePin(k,x,y){PINPOS[k]=[x,y];try{localStorage.setItem("ressawalk_pinpos",JSON.stringify(PINPOS))}catch(e){}}
+  function pinXY(k,def){return (PINPOS[k]&&PINPOS[k].length===2)?PINPOS[k]:def}
+  function facXY(e,key,label){var p=e.target.getLatLng();var x=Math.round(p.lng),y=Math.round((curImg?curImg.h:0)-p.lat);savePin(key,x,y);toast(label+" → 保存しました ["+x+","+y+"]")}
   // 鯖江市オープンデータ（公共トイレ／AED）より。位置は案内図に合わせた目安（xyは案内図ピクセル）。
   var FACILITIES={
     toilets:[
-      {n:"中央広場",m:"男6・女5・多目的1",xy:[345,300]},
-      {n:"お祭り広場北（八角）",m:"男12・女8・多目的1",xy:[325,245]},
-      {n:"冒険の森",m:"男4・女3・多目的1",xy:[495,300]},
-      {n:"西山動物園",m:"男4・女2・多目的1",xy:[300,185]},
-      {n:"嚮陽庭園（中段）",m:"男4・女2・多目的1",xy:[350,465]},
-      {n:"嚮陽庭園（北の庭）",m:"男4・女3・多目的1",xy:[385,440]},
-      {n:"嚮陽庭園（松堂亭）",m:"男1・女1・多目的1",xy:[325,485]},
-      {n:"道の駅西山公園",m:"男7・女8・多目的2・24時間",xy:[335,600]}
+      {n:"中央広場",m:"男6・女5・多目的1・ベビーベッド",baby:true,xy:[378,320]},
+      {n:"お祭り広場北（八角）",m:"男12・女8・多目的1",xy:[330,295]},
+      {n:"冒険の森",m:"男4・女3・多目的1",xy:[468,330]},
+      {n:"西山動物園",m:"男4・女2・多目的1・ベビーベッド",baby:true,xy:[250,272]},
+      {n:"嚮陽庭園（中段）",m:"男4・女2・多目的1",xy:[460,445]},
+      {n:"嚮陽庭園（北の庭）",m:"男4・女3・多目的1",xy:[518,432]},
+      {n:"嚮陽庭園（松堂亭）",m:"男1・女1・多目的1・ベビーベッド",baby:true,xy:[240,490]},
+      {n:"道の駅西山公園",m:"男7・女8・多目的2・24時間",xy:[330,595]}
     ],
     aeds:[
-      {n:"鯖江市嚮陽会館",m:"公園南西の入口付近",xy:[95,60]}
+      {n:"谷川内科クリニック",m:"約210m・園の東（本町4）",xy:[608,420]},
+      {n:"早稲田保育所",m:"約230m・園の東（本町4）",xy:[618,478]},
+      {n:"鯖江市嚮陽会館",m:"約450m・南西の入口付近",xy:[95,60]}
     ]
   };
   function drawFacilities(){
@@ -577,12 +654,19 @@
     var note=$("#facilNote");if(note)note.style.display=showFacil?"block":"none";
     if(!showFacil||!curImg)return;
     FACILITIES.toilets.forEach(function(t){
-      var ic=L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],html:'<div class="ficon toilet">WC</div>'});
-      L.marker([curImg.h-t.xy[1],t.xy[0]],{icon:ic,title:"トイレ "+t.n}).addTo(facilityLayer).on("click",function(){toast("トイレ・"+t.n+"（"+t.m+"）")});
+      var xy=pinXY("t:"+t.n,t.xy);
+      var ic=L.divIcon({className:"",iconSize:[22,22],iconAnchor:[11,11],html:'<div class="ficon toilet'+(t.baby?" baby":"")+'">WC</div>'});
+      var m=L.marker([curImg.h-xy[1],xy[0]],{icon:ic,title:"トイレ "+t.n,draggable:editMode}).addTo(facilityLayer);
+      if(t.baby)m.bindTooltip("🍼 ベビーベッド",{permanent:true,direction:"bottom",className:"babytip",offset:[0,12]});
+      m.on("click",function(){toast("トイレ・"+t.n+"（"+t.m+"）")});
+      if(editMode)m.on("dragend",function(e){facXY(e,"t:"+t.n,"トイレ "+t.n)});
     });
     FACILITIES.aeds.forEach(function(a){
+      var xy=pinXY("a:"+a.n,a.xy);
       var ic=L.divIcon({className:"",iconSize:[28,18],iconAnchor:[14,9],html:'<div class="ficon aed">AED</div>'});
-      L.marker([curImg.h-a.xy[1],a.xy[0]],{icon:ic,title:"AED "+a.n}).addTo(facilityLayer).on("click",function(){toast("AED・"+a.n+"（"+a.m+"）")});
+      var m=L.marker([curImg.h-xy[1],xy[0]],{icon:ic,title:"AED "+a.n,draggable:editMode}).addTo(facilityLayer);
+      m.on("click",function(){toast("AED・"+a.n+"（"+a.m+"）")});
+      if(editMode)m.on("dragend",function(e){facXY(e,"a:"+a.n,"AED "+a.n)});
     });
   }
   var PARK=[35.9535,136.1808];
@@ -616,14 +700,16 @@
     if(!flowerMap||!markerLayer)return;
     markerLayer.clearLayers();markers=[];
     SEASONS[curSeason].blooms.forEach(function(b,i){
-      var ll=bloomLatLng(b);if(!ll){markers[i]=null;return}
+      var xy=pinXY("b:"+curSeason+":"+b.n,b.xy);
+      if(!curImg||!xy){markers[i]=null;return}
+      var ll=[curImg.h-xy[1],xy[0]];
       var d=b.r;
       var icon=L.divIcon({className:"",iconSize:[d,d],iconAnchor:[d/2,d/2],
         html:'<div class="bpin" data-i="'+i+'" style="width:'+d+'px;height:'+d+'px;background:'+b.c+'">'+(b.big?('<b>'+b.big+'</b>'):'')+'</div>'});
       var m=L.marker(ll,{icon:icon,title:b.n,draggable:editMode}).addTo(markerLayer);
       m.bindTooltip(b.n+(b.k?"（"+b.k+"）":""),{direction:"top",className:"bloomtip",offset:[0,-d/2-2]});
       m.on("click",function(){selectBloom(i)});
-      if(editMode){m.on("dragend",function(e){var p=e.target.getLatLng();var x=Math.round(p.lng),y=Math.round(curImg.h-p.lat);toast(b.n+" → xy:["+x+","+y+"]")})}
+      if(editMode)m.on("dragend",function(e){facXY(e,"b:"+curSeason+":"+b.n,b.n)});
       markers[i]=m;
     });
   }
@@ -662,7 +748,8 @@
   $("#editPins").addEventListener("click",function(){
     editMode=!editMode;this.classList.toggle("on",editMode);
     this.textContent=editMode?"調整モード ON（ピンをドラッグ）":"ピン位置を調整";
-    drawMarkers();
+    if(editMode&&!showFacil){showFacil=true;$("#facilBtn").classList.add("on");$("#facilBtn").textContent="トイレ・AED：表示中"}
+    drawMarkers();drawFacilities();
   });
 
   /* ---------- render: 図鑑 ---------- */
@@ -806,6 +893,7 @@
   var PHOTO_KEY="ressawalk_photos_v1";
   var LIKE_KEY="ressawalk_likes_v1";
   function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+  function escAttr(s){return esc(s).split('"').join("&quot;")}
   function localPhotos(){try{return JSON.parse(localStorage.getItem(PHOTO_KEY)||"[]")||[]}catch(e){return[]}}
   function saveLocalPhotos(a){try{localStorage.setItem(PHOTO_KEY,JSON.stringify(a.slice(0,12)))}catch(e){}}
   function likedMap(){try{return JSON.parse(localStorage.getItem(LIKE_KEY)||"{}")||{}}catch(e){return{}}}
@@ -813,31 +901,67 @@
   function photoId(p){return p.id||("x"+String(p.url||"").length+"_"+(p.handle||""))}
   // 仮のサンプル写真（reference/ressa/ に配置）。likes は仮のいいね数。本番サーバー用意後は不要。
   var SAMPLE_PHOTOS=[
-    {url:"./reference/ressa/kanta.png",handle:"さばえ写真部",time:"サンプル",sample:true,id:"s1",likes:24},
-    {url:"./reference/ressa/tiara.png",handle:"レッサー推し",time:"サンプル",sample:true,id:"s2",likes:18},
-    {url:"./reference/ressa/lite.png",handle:"パンダ好き太郎",time:"サンプル",sample:true,id:"s3",likes:31},
-    {url:"./reference/ressa/motchi.png",handle:"にしやま散歩",time:"サンプル",sample:true,id:"s4",likes:12},
-    {url:"./reference/ressa/taiyo.png",handle:"福井カメラ部",time:"サンプル",sample:true,id:"s5",likes:27},
-    {url:"./reference/ressa/minfa.jpg",handle:"もふもふ係",time:"サンプル",sample:true,id:"s6",likes:9}
+    {url:"./reference/ressa/lite.png",handle:"パンダ好き太郎",sample:true,id:"s1",likes:31},
+    {url:"./reference/ressa/taiyo.png",handle:"福井カメラ部",sample:true,id:"s2",likes:27},
+    {url:"./reference/ressa/kanta.png",handle:"さばえ写真部",sample:true,id:"s3",likes:24},
+    {url:"./reference/ressa/tiara.png",handle:"レッサー推し",sample:true,id:"s4",likes:18},
+    {url:"./reference/ressa/motchi.png",handle:"にしやま散歩",sample:true,id:"s5",likes:15},
+    {url:"./reference/ressa/akebi.jpg",handle:"もふもふ係",sample:true,id:"s6",likes:13},
+    {url:"./reference/ressa/matsuba.jpg",handle:"ツツジ写真部",sample:true,id:"s7",likes:11},
+    {url:"./reference/ressa/kanoko.jpg",handle:"週末さんぽ",sample:true,id:"s8",likes:8},
+    {url:"./reference/ressa/minfa.jpg",handle:"レッサー大好き",sample:true,id:"s9",likes:6},
+    {url:"./reference/ressa/kanta.png",handle:"こどもと動物園",sample:true,id:"s10",likes:5},
+    {url:"./reference/ressa/tiara.png",handle:"鯖江さんぽ",sample:true,id:"s11",likes:3},
+    {url:"./reference/ressa/taiyo.png",handle:"めがねっこ",sample:true,id:"s12",likes:2}
   ];
+  // 今月（1日〜末日）の範囲・日付ユーティリティ
+  function fmtDate(d){return d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate()}
+  function monthRange(){var n=new Date();var start=new Date(n.getFullYear(),n.getMonth(),1);var end=new Date(n.getFullYear(),n.getMonth()+1,0);return {start:start,end:end}}
+  function monthLabel(){var m=monthRange();return "（"+m.start.getFullYear()+"年"+(m.start.getMonth()+1)+"月）"}
+  function parseDate(s){var m=/(\d{4})\/(\d{1,2})\/(\d{1,2})/.exec(s||"");return m?new Date(+m[1],+m[2]-1,+m[3]):null}
+  function inThisMonth(s){var d=parseDate(s);if(!d)return false;var m=monthRange();return d>=m.start&&d<=m.end}
+  // サンプル写真に今月の日付を割り当て（デモ用・常に今月に収まる）
+  (function(){var m=monthRange();var t=new Date();t=new Date(t.getFullYear(),t.getMonth(),t.getDate());
+    SAMPLE_PHOTOS.forEach(function(p,i){var d=new Date(t.getFullYear(),t.getMonth(),t.getDate()-i);if(d<m.start)d=m.start;p.time=fmtDate(d)})})();
+
   async function fetchPhotos(){
     if(PHOTO_API){try{var r=await fetch(PHOTO_API+"/photos");if(r.ok)return await r.json()}catch(e){}return[]}
     return localPhotos().concat(SAMPLE_PHOTOS);
   }
   function renderPhotos(list){
     var g=$("#photoGrid");if(!g)return;
-    if(!list||!list.length){g.innerHTML='<div class="photoempty">まだ投稿がありません。最初の1枚を投稿しよう！</div>';return}
+    var wl=$("#rankWeek");
+    if(wl)wl.textContent=monthLabel();
     var lm=likedMap();
-    g.innerHTML=list.map(function(p){
-      var id=photoId(p),liked=!!lm[id],cnt=(p.likes||0)+(liked?1:0);
+    var week=(list||[]).filter(function(p){return inThisMonth(p.time)});
+    week.forEach(function(p){p._l=(p.likes||0)+(lm[photoId(p)]?1:0)});
+    week.sort(function(a,b){return b._l-a._l});
+    var top=week.slice(0,7), others=week.slice(7);
+    if(!top.length){g.innerHTML='<div class="photoempty">今月の投稿はまだありません。写真を投稿しよう！</div>';}
+    else g.innerHTML=top.map(function(p,i){
+      var id=photoId(p),liked=!!lm[id],medal=i===0?" g":i===1?" s":i===2?" b":"";
+      return '<div class="rankrow">'+
+        '<div class="rankno'+medal+'">'+(i+1)+'</div>'+
+        '<img class="rankimg zoomimg" src="'+encodeURI(p.url)+'" data-h="'+escAttr(p.handle||"名無し")+'" data-t="'+escAttr(p.time||"")+'" alt="レッサーパンダの写真" loading="lazy">'+
+        '<div class="rankmeta"><div class="rh">'+esc(p.handle||"名無し")+'</div><div class="rt">'+esc(p.time||"")+'</div></div>'+
+        '<button type="button" class="likebtn'+(liked?" on":"")+'" data-id="'+esc(id)+'" aria-label="いいね">'+
+        '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.6 2 6.5 5 6.5c1.9 0 3 1.2 3.5 2 .5-.8 1.6-2 3.5-2 3 0 4.2 3.1 2.5 6C19 16.5 12 21 12 21z"/></svg>'+
+        '<span class="lc">'+p._l+'</span></button>'+
+        '</div>';
+    }).join("");
+    // 神セブン圏外の写真（その他）
+    var ob=$("#otherBtn"),op=$("#otherPhotos");
+    if(op)op.innerHTML=others.map(function(p){
+      var id=photoId(p),liked=!!lm[id];
       return '<div class="photocard">'+(p.sample?'<span class="pbadge">サンプル</span>':'')+
-        '<img src="'+encodeURI(p.url)+'" alt="レッサーパンダの写真" loading="lazy">'+
+        '<img class="gimg zoomimg" src="'+encodeURI(p.url)+'" data-h="'+escAttr(p.handle||"名無し")+'" data-t="'+escAttr(p.time||"")+'" alt="レッサーパンダの写真" loading="lazy">'+
         '<div class="pmeta"><div class="ph">'+esc(p.handle||"名無し")+'</div>'+
         '<div class="prow"><span class="pt">'+esc(p.time||"")+'</span>'+
         '<button type="button" class="likebtn'+(liked?" on":"")+'" data-id="'+esc(id)+'" aria-label="いいね">'+
         '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.6 2 6.5 5 6.5c1.9 0 3 1.2 3.5 2 .5-.8 1.6-2 3.5-2 3 0 4.2 3.1 2.5 6C19 16.5 12 21 12 21z"/></svg>'+
-        '<span class="lc">'+cnt+'</span></button></div></div></div>';
+        '<span class="lc">'+p._l+'</span></button></div></div></div>';
     }).join("");
+    if(ob)ob.style.display=others.length?"block":"none";
   }
   async function loadPhotos(){renderPhotos(await fetchPhotos())}
   function resizeImage(file,max,cb){
@@ -883,13 +1007,150 @@
         }
       });
     });
-    $("#photoGrid").addEventListener("click",function(e){
+    function photoClick(e){
+      var img=e.target.closest&&e.target.closest(".zoomimg");
+      if(img){
+        $("#lightImg").src=img.getAttribute("src");
+        var h=img.getAttribute("data-h")||"",t=img.getAttribute("data-t")||"";
+        $("#lightCap").textContent=h+(t?"　"+t:"");
+        $("#lightbox").classList.add("show");return;
+      }
       var b=e.target.closest?e.target.closest(".likebtn"):null;if(!b)return;
       var id=b.getAttribute("data-id"),m=likedMap();
       if(m[id])delete m[id];else m[id]=1;
       setLikedMap(m);loadPhotos();
+    }
+    $("#photoGrid").addEventListener("click",photoClick);
+    $("#otherPhotos").addEventListener("click",photoClick);
+    $("#otherBtn").addEventListener("click",function(){
+      var o=$("#otherPhotos"),show=o.style.display==="none";
+      o.style.display=show?"grid":"none";
+      this.textContent=show?"その他の写真を隠す":"その他の写真をみる";
     });
+    $("#lightbox").addEventListener("click",function(){this.classList.remove("show")});
     loadPhotos();
+  })();
+
+  /* ---------- 自動デモ用の受信口（demo.html から postMessage で操作） ---------- */
+  window.addEventListener("message",function(e){
+    var m=e.data||{};
+    try{
+      if(m.cmd==="tab"){go(m.id)}
+      else if(m.cmd==="scroll"){var v=$(".views");if(v){try{v.scrollTo({top:m.y||0,behavior:"smooth"})}catch(_){v.scrollTop=m.y||0}}}
+      else if(m.cmd==="click"){var el=document.querySelector(m.sel);if(el)el.click()}
+      else if(m.cmd==="clickAt"){var els=document.querySelectorAll(m.sel);if(els[m.i])els[m.i].click()}
+    }catch(err){}
+  });
+
+  /* ---------- 意見箱（西山公園への意見投稿） ----------
+     設置意図：来園者の声を集め、公園・アプリの改善に活かす。現状はデモ（端末内に保存）、本番は鯖江市へ届く仕組みを想定。 */
+  var OP_KEY="ressawalk_opinions_v1";
+  function loadOps(){try{return JSON.parse(localStorage.getItem(OP_KEY)||"[]")||[]}catch(e){return[]}}
+  function saveOps(a){try{localStorage.setItem(OP_KEY,JSON.stringify(a.slice(0,30)))}catch(e){}}
+  function renderOps(){
+    var el=$("#opList");if(!el)return;
+    var a=loadOps();
+    if(!a.length){el.innerHTML="";return}
+    el.innerHTML='<div class="lbl" style="margin:14px 2px 8px">寄せられた意見（この端末）</div>'+a.map(function(o){
+      return '<div class="opcard"><div class="opt">'+esc(o.text)+'</div><div class="opm">'+esc(o.name||"名無し")+' ・ '+esc(o.time||"")+'</div></div>';
+    }).join("");
+  }
+  (function initOp(){
+    var btn=$("#opBtn");if(!btn)return;
+    btn.addEventListener("click",function(){
+      var txt=($("#opText").value||"").trim();
+      if(!txt){$("#opHint").textContent="ご意見を入力してください";return}
+      var name=($("#opName").value||"").trim();
+      var d=new Date(),ts=d.getFullYear()+"/"+(d.getMonth()+1)+"/"+d.getDate();
+      var a=loadOps();a.unshift({name:name,text:txt,time:ts});saveOps(a);
+      $("#opText").value="";$("#opName").value="";
+      $("#opHint").textContent="送信しました（この端末に保存・デモ）。ありがとうございます！";
+      toast("ご意見ありがとうございます 🐾");renderOps();
+    });
+    renderOps();
+  })();
+
+  /* ---------- 西山川柳（投稿＋月間ランキング） ----------
+     設置意図：花・レッサー・紅葉をお題に、全世代が気軽に参加できる五七五で、西山公園への愛着と口コミを育てる。
+     写真ランキング同様、今月の「いいね」上位を発表。現状はデモ（端末内に保存）、本番は鯖江市のサーバーで共有を想定。 */
+  var SEN_KEY="ressawalk_senryu_v1";
+  var SENLIKE_KEY="ressawalk_senryulikes_v1";
+  function localSen(){try{return JSON.parse(localStorage.getItem(SEN_KEY)||"[]")||[]}catch(e){return[]}}
+  function saveLocalSen(a){try{localStorage.setItem(SEN_KEY,JSON.stringify(a.slice(0,30)))}catch(e){}}
+  function senLikedMap(){try{return JSON.parse(localStorage.getItem(SENLIKE_KEY)||"{}")||{}}catch(e){return{}}}
+  function setSenLikedMap(m){try{localStorage.setItem(SENLIKE_KEY,JSON.stringify(m))}catch(e){}}
+  function senId(p){return p.id||("k"+String(p.text||"").length+"_"+(p.handle||""))}
+  // 仮のサンプル川柳。likes は仮のいいね数。本番サーバー用意後は不要。
+  var SAMPLE_SENRYU=[
+    {text:"レッサーに 会いに西山 春うらら",handle:"さばえ太郎",sample:true,id:"k1",likes:34},
+    {text:"五万本 ツツジじゅうたん 日本一",handle:"花より団子",sample:true,id:"k2",likes:29},
+    {text:"無料でも 心は満タン 動物園",handle:"週末パパ",sample:true,id:"k3",likes:25},
+    {text:"パンダより 子がはしゃいでる すべり台",handle:"子育て中",sample:true,id:"k4",likes:21},
+    {text:"紅葉と レッサーの色 そっくりだ",handle:"秋さんぽ",sample:true,id:"k5",likes:18},
+    {text:"展望台 海まで見えて パンダ推し",handle:"のぼり坂",sample:true,id:"k6",likes:15},
+    {text:"混雑を アプリで避けて ひとり占め",handle:"平日派",sample:true,id:"k7",likes:12},
+    {text:"花の下 三世代で 記念撮影",handle:"家族写真",sample:true,id:"k8",likes:9},
+    {text:"めがねっこ レッサーも負けぬ つぶらな目",handle:"めがねのまち",sample:true,id:"k9",likes:7},
+    {text:"お弁当 ツツジ見ながら また来たい",handle:"のんびり派",sample:true,id:"k10",likes:5},
+    {text:"西山で 一句ひねって 日が暮れる",handle:"川柳初心者",sample:true,id:"k11",likes:3}
+  ];
+  (function(){var m=monthRange();var t=new Date();t=new Date(t.getFullYear(),t.getMonth(),t.getDate());
+    SAMPLE_SENRYU.forEach(function(p,i){var d=new Date(t.getFullYear(),t.getMonth(),t.getDate()-i);if(d<m.start)d=m.start;p.time=fmtDate(d)})})();
+  function allSen(){return localSen().concat(SAMPLE_SENRYU)}
+  function senLikeBtn(id,liked,n){
+    return '<button type="button" class="likebtn'+(liked?" on":"")+'" data-id="'+esc(id)+'" aria-label="いいね">'+
+      '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.6 2 6.5 5 6.5c1.9 0 3 1.2 3.5 2 .5-.8 1.6-2 3.5-2 3 0 4.2 3.1 2.5 6C19 16.5 12 21 12 21z"/></svg>'+
+      '<span class="lc">'+n+'</span></button>';
+  }
+  function senCard(p,rankHtml,lm){
+    var id=senId(p),liked=!!lm[id];
+    return '<div class="senrow">'+(rankHtml||"")+
+      '<div class="senku"><div class="sk">'+esc(p.text)+'</div><div class="sa">'+esc(p.handle||"名無し")+'　'+esc(p.time||"")+'</div></div>'+
+      senLikeBtn(id,liked,p._l)+'</div>';
+  }
+  function renderSenryu(){
+    var g=$("#senGrid");if(!g)return;
+    var wl=$("#senWeek");
+    if(wl)wl.textContent=monthLabel();
+    var lm=senLikedMap();
+    var week=allSen().filter(function(p){return inThisMonth(p.time)});
+    week.forEach(function(p){p._l=(p.likes||0)+(lm[senId(p)]?1:0)});
+    week.sort(function(a,b){return b._l-a._l});
+    var top=week.slice(0,7),others=week.slice(7);
+    if(!top.length){g.innerHTML='<div class="photoempty">今月の投稿はまだありません。一句つくってみよう！</div>';}
+    else g.innerHTML=top.map(function(p,i){
+      var medal=i===0?" g":i===1?" s":i===2?" b":"";
+      return senCard(p,'<div class="rankno'+medal+'">'+(i+1)+'</div>',lm);
+    }).join("");
+    var ob=$("#senOtherBtn"),op=$("#senOther");
+    if(op)op.innerHTML=others.map(function(p){return senCard(p,"",lm)}).join("");
+    if(ob)ob.style.display=others.length?"block":"none";
+  }
+  (function initSenryu(){
+    var btn=$("#senBtn");if(!btn)return;
+    btn.addEventListener("click",function(){
+      var txt=($("#senText").value||"").trim();
+      if(!txt){$("#senHint").textContent="川柳を入力してください";return}
+      var name=($("#senName").value||"").trim();
+      var a=localSen();a.unshift({text:txt,handle:name,time:fmtDate(new Date()),id:"u"+Date.now(),likes:0});saveLocalSen(a);
+      $("#senText").value="";$("#senName").value="";
+      $("#senHint").textContent="投稿しました（この端末に保存・デモ）。ありがとうございます！";
+      toast("川柳ありがとうございます 🐾");renderSenryu();
+    });
+    function senClick(e){
+      var b=e.target.closest?e.target.closest(".likebtn"):null;if(!b)return;
+      var id=b.getAttribute("data-id"),m=senLikedMap();
+      if(m[id])delete m[id];else m[id]=1;
+      setSenLikedMap(m);renderSenryu();
+    }
+    $("#senGrid").addEventListener("click",senClick);
+    $("#senOther").addEventListener("click",senClick);
+    $("#senOtherBtn").addEventListener("click",function(){
+      var o=$("#senOther"),show=o.style.display==="none";
+      o.style.display=show?"block":"none";
+      this.textContent=show?"その他の川柳を隠す":"その他の川柳をみる";
+    });
+    renderSenryu();
   })();
 
   /* ---------- init ---------- */
