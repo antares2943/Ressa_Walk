@@ -374,6 +374,13 @@
   .sheet .mrow span:last-child{font-weight:700}
   .btn{width:100%;border:none;background:var(--rust);color:#fff;font-family:var(--body);font-weight:700;font-size:14px;padding:14px;border-radius:13px;cursor:pointer;margin-top:16px}
   .btn.met{background:var(--surface-2);color:var(--ink-soft);border:1px solid var(--line)}
+
+  .rankrow,.senrow{flex-wrap:wrap}
+  .sns-small{border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--rust);font:700 11px var(--body);padding:6px;cursor:pointer;white-space:nowrap}
+  #snsDialog{width:min(400px,92vw);max-height:90dvh;overflow:auto;border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--ink);padding:18px;font-family:var(--body)}
+  #snsDialog::backdrop{background:#0008} #snsPreview{display:block;width:100%;max-height:260px;object-fit:contain;border-radius:10px;background:var(--surface-2)}
+  #snsText{width:100%;min-height:110px;resize:vertical;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit}
+  .sns-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.sns-actions button{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface-2);color:var(--ink);font:700 13px var(--body);cursor:pointer}.sns-actions button:disabled{opacity:.45}.sns-actions #snsX{background:#202020;color:white}.sns-actions #snsNative{background:#B13D70;color:white}
 </style>
 </head>
 <body>
@@ -498,7 +505,7 @@
       <!-- 「会えた」スタンプの達成度バー（JSのupdateMet()が人数と幅を更新） -->
       <div class="stampbar">
         <div class="sh"><span>会えたレッサー</span><span id="metCount">0 / 8</span></div>
-        <div class="track"><i id="metTrack" style="width:0%"></i></div>
+        <div class="track"><i id="metTrack" style="width:0%"></i></div><button type="button" class="sns-small" data-share-kind="met" data-share-index="0" style="margin-top:8px">↗ 達成記録をシェア</button>
       </div>
       <div class="datasrc"><b>出典</b>：個体名・生年月日・性別・プロフィールは鯖江市オープンデータ「西山動物園のレッサーパンダ一覧」、写真は鯖江市オープンデータ「レッサーパンダ画像」より（CC BY）。</div>
 
@@ -587,6 +594,7 @@
   <div class="lightbox" id="lightbox"><div class="lbinner"><img id="lightImg" alt="レッサーパンダの写真"><div class="lbcap" id="lightCap"></div></div></div><!-- 写真の拡大表示 -->
 </div>
 
+<dialog id="snsDialog" aria-labelledby="snsTitle"><div style="display:flex;justify-content:space-between;align-items:center"><strong id="snsTitle">SNSにシェア</strong><button id="snsClose" class="sns-small" type="button">閉じる</button></div><p style="font-size:12px">公開前に画像・文章をご確認ください。他人が映りこんだ写真は許可を得て共有してください。</p><img id="snsPreview" alt="共有画像のプレビュー"><label for="snsText" style="font-size:12px">投稿文（編集できます）</label><textarea id="snsText"></textarea><div class="sns-actions"><button id="snsX" type="button">X(twitter)で共有</button><button id="snsNative" type="button">Instagramで共有</button></div><p id="snsStatus" role="status" style="font-size:12px"></p></dialog>
 <!-- 地図ライブラリ Leaflet 本体（lib/ 内に同梱） -->
 <script src="./lib/leaflet.js"></script>
 <!-- ここから下がアプリ本体のJavaScript（全機能を1つの即時実行関数にまとめている） -->
@@ -853,6 +861,67 @@
     drawMarkers();drawFacilities();
   });
 
+  /* ===== SNS共有：外部APIキー不要。Xは投稿画面、Instagramは端末共有または手動投稿 ===== */
+  var shareState=null, shareSerial=0;
+  function shareButton(kind,index){return '<button type="button" class="sns-small" data-share-kind="'+kind+'" data-share-index="'+index+'" aria-label="X・Instagramにシェア">↗ シェア</button>'}
+  function shareText(body){var url=/^https?:$/.test(location.protocol)&&! /^(localhost|127\.0\.0\.1)$/.test(location.hostname)?'\n'+location.href.split('#')[0]:'';return body+'\n福井県鯖江市 西山公園 | Ressa Walk\n#西山公園 #鯖江市 #福井観光 #レッサーウォーク'+url}
+  function makeCard(kind,p){
+    var c=document.createElement('canvas');c.width=1080;c.height=1080;var x=c.getContext('2d');
+    x.fillStyle='#F4ECE1';x.fillRect(0,0,1080,1080);x.fillStyle='#FFFCF7';x.fillRect(36,36,1008,1008);
+    x.textAlign='center';x.fillStyle='#B24A25';x.font='bold 54px sans-serif';x.fillText('Ressa Walk',540,125);
+    x.fillStyle='#2A211B';x.font='bold 49px sans-serif';x.fillText(kind==='sen'?'西山川柳':'西山レッサー巡り',540,240);
+    if(kind==='sen'){
+      var chars=Array.from(p.text), lines=[];while(chars.length)lines.push(chars.splice(0,13).join(''));
+      x.font='bold 65px serif';lines.forEach(function(line,i){x.fillText(line,540,400+i*90,920)});
+      x.font='32px sans-serif';x.fillText(p.sample?'サンプル作品':(p.handle||'名無し'),540,845,900);
+    }else{
+      var n=PANDAS.filter(function(a){return met[a.n]}).length;
+      x.fillStyle='#B24A25';x.font='bold 140px sans-serif';x.fillText(n+' / '+PANDAS.length,540,450);
+      PANDAS.forEach(function(a,i){var xx=170+(i%4)*246, yy=580+Math.floor(i/4)*150;x.fillStyle=met[a.n]?'#B24A25':'#D8C8B3';x.beginPath();x.arc(xx,yy,35,0,Math.PI*2);x.fill();x.fillStyle='#2A211B';x.font='30px sans-serif';x.fillText(a.n,xx,yy+76,220)});
+    }
+    x.fillStyle='#B24A25';x.font='32px sans-serif';x.fillText('福井県鯖江市 西山公園',540,960);return c.toDataURL('image/png');
+  }
+  var sharePhotos=[],shareSens=[];
+  async function openShare(kind,p){
+    var serial=++shareSerial, body,src;
+    if(kind==='photo'){body=p.sample?'西山動物園のレッサーパンダ（サンプル写真）':'西山動物園のレッサーパンダ写真';if(p.sample)body+='\n写真出典：鯖江市オープンデータ（CC BY）';src=p.url;}
+    else if(kind==='sen'){body='西山川柳：'+p.text+(p.sample?'（サンプル作品）':'');src=makeCard(kind,p);}
+    else{body='西山動物園で '+PANDAS.filter(function(a){return met[a.n]}).length+' / '+PANDAS.length+' 頭に会えました！';src=makeCard(kind,p);}
+    shareState={text:shareText(body),src:src,file:null};
+    $('#snsPreview').src=src;$('#snsText').value=shareState.text;$('#snsStatus').textContent='画像を準備中…';$('#snsNative').disabled=true;$('#snsX').disabled=true;$('#snsDialog').showModal();
+    try{var blob;if(src.indexOf('data:')===0){var parts=src.split(','),raw=atob(parts[1]);blob=new Blob([Uint8Array.from(raw,function(a){return a.charCodeAt(0)})],{type:parts[0].split(':')[1].split(';')[0]});}else{var r=await fetch(encodeURI(src));if(!r.ok)throw Error('image');blob=await r.blob();}
+      if(serial!==shareSerial)return;var ext=blob.type==='image/jpeg'?'jpg':'png';shareState.file=new File([blob],'ressa-walk.'+ext,{type:blob.type});
+    }catch(e){}if(serial!==shareSerial)return;
+    var f=shareState.file;var nativeOK=!!(f&&navigator.share&&navigator.canShare&&navigator.canShare({files:[f]}));$('#snsNative').disabled=false;$('#snsX').disabled=false;
+    $('#snsStatus').textContent=nativeOK?'Instagramは端末の共有先から選択してください。':'共有ボタンで画像を保存し、SNSの投稿画面へ進みます。';
+  }
+  function saveShareImage(){if(!shareState)return;var a=document.createElement('a'), f=shareState.file;var u=f?URL.createObjectURL(f):shareState.src;a.href=u;a.download=f?f.name:'ressa-walk.'+(/\.jpe?g$/i.test(u)?'jpg':'png');document.body.appendChild(a);a.click();a.remove();if(f)setTimeout(function(){URL.revokeObjectURL(u)},30000);}
+  async function copyShare(){var t=$('#snsText');try{await navigator.clipboard.writeText(t.value);$('#snsStatus').textContent='投稿文をコピーしました。'}catch(e){t.focus();t.select();try{if(document.execCommand('copy')){$('#snsStatus').textContent='投稿文をコピーしました。';return}}catch(_){}$('#snsStatus').textContent='選択した文章を手動でコピーしてください。'}}
+  $('#snsClose').onclick=function(){$('#snsDialog').close()};
+  // Xの投稿画面にはテキストを渡し、画像は端末に保存して手動添付する。
+  $('#snsX').onclick=function(){
+    if(!shareState)return;
+    window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent($('#snsText').value),'_blank','noopener,noreferrer');
+    saveShareImage();
+
+  };
+  // Instagramへの直接指定はできないため、対応端末では標準共有を利用する。
+  // 非対応端末では画像保存・文章コピー・Instagramを開く処理をまとめる。
+  $('#snsNative').onclick=async function(){
+    if(!shareState)return;
+    var f=shareState.file;
+    if(!shareState.fileForFallback&&f&&navigator.share&&navigator.canShare&&navigator.canShare({files:[f]})){
+      try{await navigator.share({files:[f],text:$('#snsText').value});return;}
+      catch(e){if(e.name==='AbortError')return;$('#snsStatus').textContent='標準共有に失敗しました。もう一度押すと手動投稿に切り替えます。';shareState.fileForFallback=true;return;}
+    }
+    saveShareImage();
+    var copying=copyShare();
+    window.open('https://www.instagram.com/','_blank','noopener,noreferrer');
+    await copying;
+    $('#snsStatus').textContent+=' Instagramで保存した画像を選び、投稿文を貼り付けてください。';
+  };
+  document.addEventListener('click',function(e){var b=e.target.closest('[data-share-kind]');if(!b)return;var k=b.dataset.shareKind,i=+b.dataset.shareIndex;openShare(k,k==='photo'?sharePhotos[i]:k==='sen'?shareSens[i]:null)});
+
   /* ========== 推しレッサー（図鑑） ========== */
   // きょうの推し：日付(1〜31)を頭数で割った余りで1頭を選ぶ＝日替わりで変わる
   function renderPick(){
@@ -1054,6 +1123,7 @@
     var week=(list||[]).filter(function(p){return inThisMonth(p.time)}); // 今月分だけに絞る
     week.forEach(function(p){p._l=(p.likes||0)+(lm[photoId(p)]?1:0)}); // _l=合計いいね（元の数＋自分の1）
     week.sort(function(a,b){return b._l-a._l}); // いいね数の多い順に並べ替え
+    sharePhotos=week;
     var top=week.slice(0,7), others=week.slice(7); // 上位7＝七福神／残りはその他
     if(!top.length){g.innerHTML='<div class="photoempty">今月の投稿はまだありません。写真を投稿しよう！</div>';}
     else g.innerHTML=top.map(function(p,i){
@@ -1064,7 +1134,7 @@
         '<div class="rankmeta"><div class="rh">'+esc(p.handle||"名無し")+'</div><div class="rt">'+esc(p.time||"")+'</div></div>'+
         '<button type="button" class="likebtn'+(liked?" on":"")+'" data-id="'+esc(id)+'" aria-label="いいね">'+
         '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.6 2 6.5 5 6.5c1.9 0 3 1.2 3.5 2 .5-.8 1.6-2 3.5-2 3 0 4.2 3.1 2.5 6C19 16.5 12 21 12 21z"/></svg>'+
-        '<span class="lc">'+p._l+'</span></button>'+
+        '<span class="lc">'+p._l+'</span></button>'+shareButton('photo',sharePhotos.indexOf(p))+
         '</div>';
     }).join("");
     // 神セブン圏外の写真（その他）
@@ -1077,7 +1147,7 @@
         '<div class="prow"><span class="pt">'+esc(p.time||"")+'</span>'+
         '<button type="button" class="likebtn'+(liked?" on":"")+'" data-id="'+esc(id)+'" aria-label="いいね">'+
         '<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.8 9.6 2 6.5 5 6.5c1.9 0 3 1.2 3.5 2 .5-.8 1.6-2 3.5-2 3 0 4.2 3.1 2.5 6C19 16.5 12 21 12 21z"/></svg>'+
-        '<span class="lc">'+p._l+'</span></button></div></div></div>';
+        '<span class="lc">'+p._l+'</span></button></div>'+shareButton('photo',sharePhotos.indexOf(p))+'</div></div>';
     }).join("");
     if(ob)ob.style.display=others.length?"block":"none";
   }
@@ -1235,7 +1305,7 @@
     var id=senId(p),liked=!!lm[id];
     return '<div class="senrow">'+(rankHtml||"")+
       '<div class="senku"><div class="sk">'+esc(p.text)+'</div><div class="sa">'+esc(p.handle||"名無し")+'　'+esc(p.time||"")+'</div></div>'+
-      senLikeBtn(id,liked,p._l)+'</div>';
+      senLikeBtn(id,liked,p._l)+shareButton('sen',shareSens.indexOf(p))+'</div>';
   }
   // 川柳ランキングを描画（写真と同じ考え方：今月分をいいね順に上位7＝川柳七福神＋その他）
   function renderSenryu(){
@@ -1246,6 +1316,7 @@
     var week=allSen().filter(function(p){return inThisMonth(p.time)});
     week.forEach(function(p){p._l=(p.likes||0)+(lm[senId(p)]?1:0)});
     week.sort(function(a,b){return b._l-a._l});
+    shareSens=week;
     var top=week.slice(0,7),others=week.slice(7);
     if(!top.length){g.innerHTML='<div class="photoempty">今月の投稿はまだありません。一句つくってみよう！</div>';}
     else g.innerHTML=top.map(function(p,i){
